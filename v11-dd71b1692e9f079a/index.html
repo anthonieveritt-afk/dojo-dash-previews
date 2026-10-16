@@ -541,17 +541,17 @@ function kmFighterDraw(f){const K_=KM;if(!f.var){const r=(f.side?K_.lvl*7.3:1.7)
  const MITT=(h,e)=>{const d=Math.atan2(h[1]-e[1],h[0]-e[0]);g.save();g.translate(h[0],h[1]);g.rotate(d);g.fillStyle=INK;g.beginPath();g.ellipse(2,0,12,10.5,0,0,7);g.fill();g.fillStyle=col;g.beginPath();g.ellipse(2,0,10,8.5,0,0,7);g.fill();g.fillStyle='#0003';g.beginPath();g.ellipse(2,3.5,9,4.5,0,0,Math.PI);g.fill();g.fillStyle='#fff5';g.beginPath();g.ellipse(4,-4,4,2,0,0,7);g.fill();g.fillStyle=col;g.strokeStyle=INK;g.lineWidth=2;g.beginPath();g.rect(-12,-6,6,12);g.fill();g.stroke();g.restore()}; // WKF fist mitt with cuff
  const ARM=(sh,e,h,c)=>{rigLimb(sh,e,18,19,c,LN2);const w=PT(e,h,.55);rigLimb(w,h,9,8,skin);rigLimb(e,w,19,24,c,LN2);
    g.strokeStyle=LN2;g.lineWidth=1.2;const m=PT(sh,e,.5);g.beginPath();g.moveTo(m[0]-3,m[1]-4);g.lineTo(m[0]+3,m[1]+4);g.stroke();MITT(h,e)}; // big sleeve ending on the forearm
- const LEG=(hp,k,a,ang,c)=>{rigLimb(hp,k,24,22,c,LN2);const hem=PT(k,a,.48);
+ const LEG=(hp,k,a,ang,c)=>{rigLimb(hp,k,24,22,c,LN2);const hem=PT(k,a,.4);
    const pt=PT(hem,a,-.05);rigLimbRaw(pt,a,15.5,14,INK);rigLimbRaw(pt,a,12,10.5,col);g.strokeStyle='#0005';g.lineWidth=1.2;for(const t of [.35,.7]){const q=PT(pt,a,t);const dx=a[0]-pt[0],dy=a[1]-pt[1],L=Math.hypot(dx,dy)||1;g.beginPath();g.moveTo(q[0]-dy/L*6,q[1]+dx/L*6);g.lineTo(q[0]+dy/L*6,q[1]-dx/L*6);g.stroke()} // shin pad
    rigFoot([a[0],a[1]],ang,col);
-   rigLimb(k,hem,22,28,c,LN2); // wide trouser leg flaring to the hem
+   rigLimb(k,hem,22,26,c,LN2); // wide trouser leg flaring to the hem
    g.strokeStyle=LN2;g.lineWidth=1.2;const m=PT(hp,k,.55),m2=PT(k,hem,.55);g.beginPath();g.moveTo(m[0]-6,m[1]);g.quadraticCurveTo(m[0],m[1]+3,m[0]+6,m[1]-2);g.moveTo(m2[0]-6,m2[1]-2);g.quadraticCurveTo(m2[0],m2[1]+2,m2[0]+6,m2[1]-3);g.stroke()}; // trouser folds
  // far side first
  ARM(shB,eb,rh,GIS);LEG(hipB,kb,bf,P.bfA,GIS);
  // jacket: broad shoulders, slim waist, skirt hanging below the belt
  const nx=Math.cos(P.lean),ny=Math.sin(P.lean);
- g.beginPath();g.moveTo(S[0]-19*nx,S[1]-19*ny);g.lineTo(S[0]+19*nx,S[1]+19*ny);g.lineTo(hip[0]+14,hip[1]-3);g.lineTo(hip[0]+22,hip[1]+30);g.lineTo(hip[0]-21,hip[1]+30);g.lineTo(hip[0]-14,hip[1]-3);g.closePath();g.fillStyle=GI;g.fill();g.strokeStyle=INK;g.lineWidth=2.6;g.lineJoin='round';g.stroke();
- g.fillStyle=GIK;g.beginPath();g.moveTo(S[0]-19*nx,S[1]-19*ny);g.lineTo(hip[0]-14,hip[1]-3);g.lineTo(hip[0]-21,hip[1]+30);g.lineTo(hip[0]-9,hip[1]+30);g.lineTo(hip[0]-5,hip[1]);g.lineTo(S[0]-8*nx,S[1]-8*ny);g.closePath();g.fill(); // cel shadow on the back half
+ g.beginPath();g.moveTo(S[0]-15*nx,S[1]-15*ny);g.lineTo(S[0]+19*nx,S[1]+19*ny);g.lineTo(hip[0]+14,hip[1]-3);g.lineTo(hip[0]+22,hip[1]+30);g.lineTo(hip[0]-21,hip[1]+30);g.lineTo(hip[0]-14,hip[1]-3);g.closePath();g.fillStyle=GI;g.fill();g.strokeStyle=INK;g.lineWidth=2.6;g.lineJoin='round';g.stroke();
+ g.fillStyle=GIK;g.beginPath();g.moveTo(S[0]-15*nx,S[1]-15*ny);g.lineTo(hip[0]-14,hip[1]-3);g.lineTo(hip[0]-21,hip[1]+30);g.lineTo(hip[0]-9,hip[1]+30);g.lineTo(hip[0]-5,hip[1]);g.lineTo(S[0]-8*nx,S[1]-8*ny);g.closePath();g.fill(); // cel shadow on the back half
  g.strokeStyle=LN2;g.lineWidth=1.2;g.beginPath();g.moveTo(hip[0]+4,hip[1]+4);g.lineTo(hip[0]+7,hip[1]+30);g.moveTo(hip[0]-12,hip[1]+12);g.lineTo(hip[0]-14,hip[1]+29);g.stroke(); // skirt overlap + fold
  g.fillStyle=skin;g.beginPath();g.moveTo(S[0]+1,S[1]-1);g.lineTo(S[0]+10*nx+3,S[1]+10*ny);g.lineTo(S[0]+6+Math.sin(P.lean)*18,S[1]+18);g.closePath();g.fill();
  g.lineCap='butt';g.strokeStyle=INK;g.lineWidth=9;g.beginPath();g.moveTo(S[0]-1,S[1]-1);g.lineTo(hip[0]+12,hip[1]-4);g.stroke();g.strokeStyle='#ffffff';g.lineWidth=6.5;g.stroke(); // wide lapel
@@ -594,8 +594,8 @@ function kmFighterDraw(f){const K_=KM;if(!f.var){const r=(f.side?K_.lvl*7.3:1.7)
   g.beginPath();g.ellipse(13,1,6,5.5,0,0,7);g.fill();g.stroke();g.restore()}
   if(SPD){g.strokeStyle='rgba(255,255,255,.85)';g.lineCap='round';for(let i=0;i<6;i++){const y=-150+i*22+(f.act==='sweep'?90:0)-(f.act==='hkick'?40:0),x0=-40-(i%2)*18;g.lineWidth=i%3?2:3;g.beginPath();g.moveTo(x0,y);g.lineTo(x0-38-(i*13%25),y);g.stroke()}} // manga speed lines
  g.restore();
- if(f.act==='hit')txt('💫',px,FY-170,20);
- txt(f.side?'AKA':'AO',px,FY-182,14,f.side?'#ff8a80':'#82b1ff')}
+ if(f.act==='hit')txt('💫',px,FY-196,20);
+ txt(f.side?'AKA':'AO',px,FY-212,14,f.side?'#ff8a80':'#82b1ff')}
 function KM_OSKIN(){return OPPSKIN[KM.lvl%OPPSKIN.length]}function KM_OHAIR(){return OPPHAIR[(KM.lvl*3)%OPPHAIR.length]}
 function kmRefDraw(){const R=KM.ref,px=MX0+R.x*PXM,y=FY-14;g.save();g.translate(px+Math.sin(frame*.035)*2.5,y);g.rotate(Math.sin(frame*.035)*.015);g.scale(.92,.92);
  g.strokeStyle='#263238';g.lineWidth=13;g.lineCap='round';g.beginPath();g.moveTo(-6,-66);g.lineTo(-10,0);g.moveTo(6,-66);g.lineTo(10,0);g.stroke();
