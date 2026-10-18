@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta name="robots" content="noindex,nofollow"><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Dojo Dash – Stance Training – PREVIEW</title>
+<!-- PREVIEW PROTOTYPE – not published. Forza Karate Club. Local saving only (localStorage), no accounts, no online features.
+     ⚠ STANCE DETAILS NEED CONFIRMING BY CLUB OPERATIONS AGAINST THE FORZA SYLLABUS (lengths, weight splits, foot angles). -->
+<style>
+:root{--red:#b71c1c;--cream:#fff8e1;--ink:#1a1a1a;--gold:#ffd600}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Trebuchet MS",system-ui,sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;display:flex;flex-direction:column;align-items:center}
+header{width:100%;background:var(--red);color:#fff;padding:10px 14px;display:flex;align-items:center;gap:10px;border-bottom:4px solid var(--ink)}
+header h1{font-size:20px;margin:0;flex:1;font-style:italic;text-shadow:2px 2px 0 #000}
+header a{color:#fff;font-weight:bold;text-decoration:none;border:2px solid #fff;border-radius:10px;padding:6px 10px}
+main{width:100%;max-width:560px;padding:14px}
+.panel{background:#fff;border:4px solid var(--ink);border-radius:16px;box-shadow:6px 6px 0 var(--ink);padding:14px;margin-bottom:16px}
+.warn{background:#fff3cd;border:3px dashed #b26a00;border-radius:12px;padding:8px;font-size:13px;margin-bottom:12px}
+.btn{display:block;width:100%;min-height:64px;font-size:22px;font-weight:bold;border:4px solid var(--ink);border-radius:14px;background:var(--red);color:#fff;box-shadow:4px 4px 0 var(--ink);margin-top:12px;cursor:pointer}
+.btn.alt{background:var(--gold);color:#000}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.opt{min-height:72px;font-size:18px;font-weight:bold;border:4px solid var(--ink);border-radius:14px;background:#fff;box-shadow:4px 4px 0 var(--ink);cursor:pointer;padding:4px}
+.opt small{display:block;font-weight:normal;font-size:12px}
+.opt.right{background:#a5d6a7}.opt.wrong{background:#ef9a9a}
+svg{width:100%;height:auto;display:block}
+h2{margin:4px 0;font-style:italic;color:var(--red);text-align:center}
+.sub{text-align:center;margin:0 0 6px;font-weight:bold}
+ul{margin:6px 0;padding-left:22px;font-size:17px}
+.split{display:flex;height:30px;border:3px solid var(--ink);border-radius:8px;overflow:hidden;font-weight:bold;font-size:14px;color:#fff;text-align:center;line-height:24px}
+.split div:first-child{background:#455a64}.split div:last-child{background:var(--red)}
+.row{display:flex;justify-content:space-between;font-weight:bold;font-size:18px}
+.bar{height:14px;border:3px solid var(--ink);border-radius:8px;overflow:hidden;margin:6px 0}.bar i{display:block;height:100%;background:var(--red)}
+.badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}.bdg{border:3px solid var(--ink);border-radius:20px;padding:4px 10px;font-weight:bold;background:#eee;opacity:.4}.bdg.on{background:var(--gold);opacity:1}
+.hide{display:none}
+footer{font-size:12px;color:#666;padding:10px;text-align:center}
+</style></head><body>
+<header><a href="index.html" aria-label="Back to training hub">⬅</a><h1>DOJO DASH · Stance Training</h1></header>
+<main>
+<div class="warn">⚠ Preview: stance details (lengths, weight splits, foot angles) <b>need confirming by Club Operations against the Forza syllabus</b>.</div>
+<section id="home"><div class="panel" style="text-align:center">
+  <h2>Dachi — Stances</h2><p>Strong stances make strong karate! Learn all 9 stances, then test your eyes in Spot it.</p>
+  <button class="btn alt" id="goLearn">📖 Learn</button><button class="btn" id="goSpot">⏱ Spot it!</button>
+  <p id="bestLine" style="font-weight:bold"></p><div class="badges" id="badges"></div></div></section>
+<section id="learn" class="hide"><div class="panel">
+  <div class="row"><span id="lPos"></span><span>📖 Learn</span></div>
+  <h2 id="lName"></h2><p class="sub" id="lEn"></p>
+  <div id="lFig"></div>
+  <div class="split" id="lSplit"></div><div style="display:flex;justify-content:space-between;font-size:12px"><span>back / left</span><span>front / right</span></div>
+  <ul id="lPts"></ul>
+  <div class="opts"><button class="opt" id="lPrev">◀ Back</button><button class="opt" id="lNext">Next ▶</button></div>
+  <button class="btn alt" id="lHome">Done</button></div></section>
+<section id="spot" class="hide"><div class="panel">
+  <div class="row"><span id="sScore">⭐ 0</span><span id="sStreak">🔥 0</span><span id="sLives">❤️❤️❤️</span></div>
+  <div class="bar"><i id="sTime" style="width:100%"></i></div>
+  <p class="sub">Which stance is this?</p>
+  <div id="sFig"></div><div class="opts" id="sOpts"></div><p class="sub" id="sMsg"></p></div></section>
+<section id="over" class="hide"><div class="panel" style="text-align:center">
+  <h2 style="font-size:40px">OSS!</h2><p id="oText" style="font-size:20px"></p><div class="badges" id="oBadges"></div>
+  <button class="btn" id="oAgain">Play again</button><button class="btn alt" id="oHome">Menu</button></div></section>
+</main>
+<footer>Forza Karate Club · Dojo Dash training PREVIEW · progress saved on this device only</footer>
+<script>
+// STANCE DATA — needs confirming by Club Operations against the Forza syllabus.
+// view: 'front' or 'side' (facing right). Legs: [hip, knee, ankle] per leg; feet: top-view [x,y,angleDeg,tiptoe].
+var S=[
+ {id:'heiko',name:'Heiko dachi',en:'Parallel stance',view:'front',hip:[120,168],legs:[[[108,168],[104,218],[100,266]],[[132,168],[136,218],[140,266]]],w:[50,50],
+  feet:[[95,55,0],[145,55,0]],pts:['Feet shoulder-width apart','Feet parallel, toes pointing forwards','Knees soft, not locked','Weight even: 50 / 50']},
+ {id:'musubi',name:'Musubi dachi',en:'Formal / attention stance',view:'front',hip:[120,166],legs:[[[112,166],[114,216],[116,266]],[[128,166],[126,216],[124,266]]],w:[50,50],toeOut:28,
+  feet:[[110,58,-28],[130,58,28]],pts:['Heels together','Toes open in a V (about 45° between the feet)','Stand tall, ready to bow','Weight even: 50 / 50']},
+ {id:'kiba',name:'Kiba dachi',en:'Horse-riding stance',view:'front',hip:[120,196],legs:[[[106,196],[66,226],[62,266]],[[134,196],[174,226],[178,266]]],w:[50,50],
+  feet:[[60,55,0],[180,55,0]],pts:['Wide: about two shoulder-widths','Feet parallel, toes forwards (or slightly in)','Knees bent and pushed out over the feet','Back straight, hips low','Weight even: 50 / 50']},
+ {id:'shiko',name:'Shiko dachi',en:'Square / sumo stance',view:'front',hip:[120,204],legs:[[[106,204],[60,226],[58,266]],[[134,204],[180,226],[182,266]]],w:[50,50],toeOut:45,
+  feet:[[55,55,-45],[185,55,45]],pts:['Wide like kiba dachi','Toes turned out about 45°','Knees pushed out over the toes','Hips low, back straight','Weight even: 50 / 50']},
+ {id:'sanchin',name:'Sanchin dachi',en:'Hourglass stance',view:'front',hip:[120,170],legs:[[[110,170],[112,220],[98,264]],[[130,170],[128,218],[142,262]]],w:[50,50],toeIn:15,
+  feet:[[95,72,15],[140,42,-15]],pts:['Front foot toes level with back heel','Feet shoulder-width, toes turned slightly in','Knees squeezed gently inwards','Hips tucked under','Weight even: 50 / 50']},
+ {id:'zenkutsu',name:'Zenkutsu dachi',en:'Front stance',view:'side',hip:[118,190],legs:[[[112,190],[80,228],[50,266]],[[124,190],[188,222],[190,266]]],w:[40,60],
+  feet:[[95,88,-25],[140,22,0]],pts:['Long stance: front knee over the toes','Back leg straight, back heel down','Front foot points forwards','Hips facing the front','Weight about 60 front / 40 back']},
+ {id:'kokutsu',name:'Kokutsu dachi',en:'Back stance',view:'side',hip:[98,186],legs:[[[94,186],[96,226],[70,266]],[[102,186],[150,226],[172,266]]],w:[70,30],
+  feet:[[100,82,-90],[105,22,0]],pts:['Back knee bent and pushed out','Front leg lightly bent, front foot points forwards','Feet make an L shape','Most weight on the back leg: about 70 back / 30 front']},
+ {id:'neko',name:'Neko ashi dachi',en:'Cat stance',view:'side',hip:[100,182],legs:[[[96,182],[124,224],[94,266]],[[104,182],[142,222],[150,262]]],w:[90,10],tiptoe:true,
+  feet:[[100,75,-30],[112,30,0,1]],pts:['Short stance, back knee well bent','Front heel raised, only the ball of the foot touches','Front foot points forwards','Almost all weight on the back leg: about 90 / 10']},
+ {id:'fudo',name:'Fudo dachi',en:'Rooted stance',view:'side',hip:[120,196],legs:[[[114,196],[78,232],[56,266]],[[126,196],[176,228],[186,266]]],w:[50,50],
+  feet:[[92,86,-40],[140,24,-10]],pts:['Long like zenkutsu, low like kiba','Both knees bent and pushed out','Front foot forwards, back foot turned out','Weight even: 50 / 50']}
+];
+var BELT='#ff9800';
+function limb(p,w){ var d='M'+p.map(function(q){return q.join(',')}).join(' L');
+  return '<path d="'+d+'" stroke="#1a1a1a" stroke-width="'+(w+6)+'" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="'+d+'" stroke="#fdfdfd" stroke-width="'+w+'" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'; }
+function foot(a,dir,tip){ // side view: dir=+1 toes right. front view: dir = angle in degrees
+  var x=a[0],y=a[1];
+  if(typeof dir==='object'){ var ang=dir.ang||0, len=Math.max(8,20*Math.cos(ang*Math.PI/180)), off=16*Math.sin(ang*Math.PI/180);
+    return '<ellipse cx="'+(x+off/2)+'" cy="'+(y+6)+'" rx="'+(9+Math.abs(off)/2)+'" ry="'+(7)+'" fill="#ffcc80" stroke="#1a1a1a" stroke-width="3"/>'; }
+  if(tip) return '<path d="M'+(x-4)+','+(y+2)+' L'+(x+18)+','+(y+10)+'" stroke="#1a1a1a" stroke-width="12" stroke-linecap="round"/><path d="M'+(x-4)+','+(y+2)+' L'+(x+18)+','+(y+10)+'" stroke="#ffcc80" stroke-width="7" stroke-linecap="round"/>';
+  return '<path d="M'+(x-8)+','+(y+6)+' L'+(x+20*dir)+','+(y+6)+'" stroke="#1a1a1a" stroke-width="13" stroke-linecap="round"/><path d="M'+(x-8)+','+(y+6)+' L'+(x+20*dir)+','+(y+6)+'" stroke="#ffcc80" stroke-width="8" stroke-linecap="round"/>'; }
+function figure(s,showMarks){
+  var h=s.hip, side=s.view==='side', sh=[h[0]+(side?6:0),h[1]-78], o='';
+  o+='<rect x="0" y="0" width="240" height="300" fill="#fff8e1"/><path d="M0,272 H240" stroke="#8d6e63" stroke-width="4"/>';
+  o+='<text x="120" y="22" text-anchor="middle" font-size="11" fill="#b71c1c" font-weight="bold">FORZA KARATE CLUB</text>';
+  // far arm (behind) in side view
+  var fistY=sh[1]-4;
+  if(side) o+=limb([[sh[0]-2,sh[1]+6],[sh[0]+16,sh[1]+40],[sh[0]+30,fistY+4]],13);
+  // legs (trousers)
+  s.legs.forEach(function(L,i){ o+=limb(L,17); });
+  s.legs.forEach(function(L,i){ var a=L[2];
+    if(side) o+=foot(a,1,s.tiptoe&&i===1);
+    else { var ang=(s.toeOut||0)*(i?1:-1)-(s.toeIn||0)*(i?1:-1); o+=foot(a,{ang:ang}); } });
+  // torso (jacket)
+  var tw=side?30:46;
+  o+='<path d="M'+(sh[0]-tw/2)+','+(sh[1])+' L'+(sh[0]+tw/2)+','+sh[1]+' L'+(h[0]+tw/2+2)+','+(h[1]+8)+' L'+(h[0]-tw/2-2)+','+(h[1]+8)+' Z" fill="#fdfdfd" stroke="#1a1a1a" stroke-width="3.5" stroke-linejoin="round"/>';
+  o+='<path d="M'+(sh[0]-8)+','+sh[1]+' L'+(sh[0]+(side?8:0))+','+(sh[1]+34)+(side?'':' L'+(sh[0]+8)+','+sh[1])+'" stroke="#1a1a1a" stroke-width="2.5" fill="none"/>';
+  // belt + knot + tails
+  o+='<rect x="'+(h[0]-tw/2-3)+'" y="'+(h[1]-10)+'" width="'+(tw+6)+'" height="9" fill="'+BELT+'" stroke="#1a1a1a" stroke-width="2.5"/>';
+  var kx=side?h[0]+tw/2-2:h[0];
+  o+='<rect x="'+(kx-5)+'" y="'+(h[1]-12)+'" width="10" height="12" rx="2" fill="'+BELT+'" stroke="#1a1a1a" stroke-width="2.5"/><path d="M'+(kx-2)+','+(h[1])+' l-6,20 M'+(kx+2)+','+h[1]+' l6,19" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round"/><path d="M'+(kx-2)+','+(h[1])+' l-6,20 M'+(kx+2)+','+h[1]+' l6,19" stroke="'+BELT+'" stroke-width="3.5" stroke-linecap="round"/>';
+  // near arm(s): guard — elbows down, fists up at chin height
+  if(side) o+=limb([[sh[0]+2,sh[1]+6],[sh[0]+20,sh[1]+42],[sh[0]+40,fistY]],13)+'<circle cx="'+(sh[0]+42)+'" cy="'+fistY+'" r="8" fill="#ffcc80" stroke="#1a1a1a" stroke-width="3"/><circle cx="'+(sh[0]+32)+'" cy="'+(fistY+5)+'" r="7" fill="#ffcc80" stroke="#1a1a1a" stroke-width="3"/>';
+  else [-1,1].forEach(function(d){ var sx=sh[0]+d*22; o+=limb([[sx,sh[1]+6],[sx+d*6,sh[1]+44],[sh[0]+d*12,fistY]],13)+'<circle cx="'+(sh[0]+d*12)+'" cy="'+fistY+'" r="8" fill="#ffcc80" stroke="#1a1a1a" stroke-width="3"/>'; });
+  // head (manga style)
+  var hx=sh[0]+(side?4:0), hy=sh[1]-24;
+  o+='<circle cx="'+hx+'" cy="'+hy+'" r="19" fill="#ffcc80" stroke="#1a1a1a" stroke-width="3.5"/>';
+  o+='<path d="M'+(hx-20)+','+(hy-2)+' Q'+(hx-14)+','+(hy-30)+' '+hx+','+(hy-22)+' Q'+(hx+16)+','+(hy-32)+' '+(hx+20)+','+(hy-2)+' L'+(hx+12)+','+(hy-12)+' L'+(hx+4)+','+(hy-6)+' L'+(hx-4)+','+(hy-12)+' L'+(hx-12)+','+(hy-6)+' Z" fill="#1a1a1a"/>';
+  o+='<rect x="'+(hx-19)+'" y="'+(hy-12)+'" width="38" height="5" fill="#b71c1c"/>';
+  if(side) o+='<circle cx="'+(hx+10)+'" cy="'+(hy+2)+'" r="2.6" fill="#1a1a1a"/><path d="M'+(hx+6)+','+(hy+11)+' h7" stroke="#1a1a1a" stroke-width="2"/>';
+  else o+='<circle cx="'+(hx-7)+'" cy="'+(hy+2)+'" r="2.6" fill="#1a1a1a"/><circle cx="'+(hx+7)+'" cy="'+(hy+2)+'" r="2.6" fill="#1a1a1a"/><path d="M'+(hx-5)+','+(hy+11)+' q5,4 10,0" stroke="#1a1a1a" stroke-width="2" fill="none"/>';
+  // key-point marks (Learn only)
+  if(showMarks){
+    if(s.id==='zenkutsu'||s.id==='fudo'){ var k=s.legs[1][1]; o+='<path d="M'+k[0]+','+(k[1]-16)+' V270" stroke="#2e7d32" stroke-width="2.5" stroke-dasharray="5 4"/><text x="'+(k[0]-6)+'" y="'+(k[1]-20)+'" font-size="11" fill="#2e7d32" text-anchor="end" font-weight="bold">knee over toes</text>'; }
+    if(s.id==='neko'){ o+='<text x="168" y="250" font-size="11" fill="#2e7d32" font-weight="bold">heel up</text>'; }
+    if(s.id==='kiba'||s.id==='shiko'){ o+='<path d="M20,'+(h[1]+4)+' H220" stroke="#2e7d32" stroke-width="2" stroke-dasharray="5 4"/><text x="120" y="'+(h[1]+60)+'" font-size="11" fill="#2e7d32" text-anchor="middle" font-weight="bold">hips low · knees out</text>'; }
+    if(s.id==='sanchin'){ o+='<text x="120" y="250" font-size="11" fill="#2e7d32" text-anchor="middle" font-weight="bold">knees in</text>'; }
+  }
+  // footprint panel (top view, forwards = up)
+  o+='<g transform="translate(0,300)"><rect x="4" y="4" width="232" height="108" rx="12" fill="#e3f2fd" stroke="#1a1a1a" stroke-width="3"/><path d="M120,12 V104" stroke="#90a4ae" stroke-dasharray="4 4"/><text x="226" y="22" font-size="10" text-anchor="end" fill="#455a64">▲ front</text>';
+  s.feet.forEach(function(f,i){ var left=f[0]<120||(i===0); o+='<g transform="translate('+f[0]+','+f[1]+') rotate('+f[2]+')"><ellipse cx="0" cy="0" rx="10" ry="20" fill="'+(f[3]?'#fff':'#ffcc80')+'" stroke="#1a1a1a" stroke-width="2.5" '+(f[3]?'stroke-dasharray="4 3"':'')+'/><circle cx="'+(left?5:-5)+'" cy="-24" r="4.5" fill="#ffcc80" stroke="#1a1a1a" stroke-width="2"/></g>'; });
+  o+='</g>';
+  return '<svg viewBox="0 0 240 416" role="img" aria-label="Karate stance figure">'+o+'</svg>';
+}
+// ---- state & saving (this device only) ----
+var KEY='dojoDashStances.v1', SV={best:0,bestStreak:0,badges:[],learned:[]};
+try{var x=JSON.parse(localStorage.getItem(KEY)||'null'); if(x) SV=Object.assign(SV,x);}catch(e){}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(SV));}catch(e){}}
+var BADGES=[{id:'learn',t:'📖 Scholar',why:'View all 9 stances'},{id:'s5',t:'🔥 Streak 5'},{id:'s10',t:'⚡ Streak 10'},{id:'s20',t:'🐉 Streak 20'},{id:'p15',t:'🥋 Score 15'},{id:'p30',t:'🏆 Score 30'}];
+function award(id){ if(SV.badges.indexOf(id)<0){SV.badges.push(id);persist();return true;} return false; }
+function badgeHTML(){ return BADGES.map(function(b){return '<span class="bdg'+(SV.badges.indexOf(b.id)>=0?' on':'')+'">'+b.t+'</span>'}).join(''); }
+var $=function(i){return document.getElementById(i)};
+function show(id){['home','learn','spot','over'].forEach(function(s){$(s).classList.toggle('hide',s!==id)});window.scrollTo(0,0);}
+function home(){ $('bestLine').textContent='Best score '+SV.best+' · best streak '+SV.bestStreak; $('badges').innerHTML=badgeHTML(); show('home'); }
+// Learn
+var li=0;
+function renderLearn(){ var s=S[li]; $('lPos').textContent=(li+1)+' / '+S.length; $('lName').textContent=s.name; $('lEn').textContent=s.en; $('lFig').innerHTML=figure(s,true);
+  $('lSplit').innerHTML='<div style="width:'+s.w[0]+'%">'+s.w[0]+'%</div><div style="width:'+s.w[1]+'%">'+s.w[1]+'%</div>';
+  $('lPts').innerHTML=s.pts.map(function(p){return '<li>'+p+'</li>'}).join('');
+  if(SV.learned.indexOf(s.id)<0){SV.learned.push(s.id);persist();} if(SV.learned.length>=S.length) award('learn'); }
+$('goLearn').onclick=function(){li=0;renderLearn();show('learn')};
+$('lPrev').onclick=function(){li=(li+S.length-1)%S.length;renderLearn()};
+$('lNext').onclick=function(){li=(li+1)%S.length;renderLearn()};
+$('lHome').onclick=home;
+// Spot it: timed, speeds up with each correct answer
+var G={}, timer=null;
+function startSpot(){ G={score:0,streak:0,lives:3,time:8000,last:-1,newB:[]}; show('spot'); nextSpot(); }
+function nextSpot(){
+  clearInterval(timer); var i; do{i=Math.floor(Math.random()*S.length)}while(i===G.last); G.last=i; G.cur=S[i];
+  var ch=[i]; while(ch.length<4){var j=Math.floor(Math.random()*S.length); if(ch.indexOf(j)<0) ch.push(j);} ch.sort(function(){return Math.random()-.5});
+  $('sFig').innerHTML=figure(S[i],false); $('sMsg').textContent='';
+  $('sOpts').innerHTML=ch.map(function(k){return '<button class="opt" data-k="'+k+'">'+S[k].name+'<small>'+S[k].en+'</small></button>'}).join('');
+  [].forEach.call(document.querySelectorAll('#sOpts .opt'),function(b){b.onclick=function(){pick(+b.dataset.k,b)}});
+  hud(); var t0=Date.now(), lim=G.time;
+  timer=setInterval(function(){ var f=1-(Date.now()-t0)/lim; $('sTime').style.width=Math.max(0,f*100)+'%'; if(f<=0){clearInterval(timer); pick(-1,null);} },50);
+}
+function hud(){ $('sScore').textContent='⭐ '+G.score; $('sStreak').textContent='🔥 '+G.streak; $('sLives').textContent='❤️'.repeat(G.lives)+'🤍'.repeat(3-G.lives); }
+function pick(k,b){ clearInterval(timer); var ok=k===G.last;
+  [].forEach.call(document.querySelectorAll('#sOpts .opt'),function(x){x.disabled=true; if(+x.dataset.k===G.last)x.classList.add('right')});
+  if(ok){ G.score++; G.streak++; G.time=Math.max(2500,G.time*0.92); $('sMsg').textContent='Oss! ✔';
+    [[5,'s5'],[10,'s10'],[20,'s20']].forEach(function(a){ if(G.streak>=a[0]&&award(a[1])) G.newB.push(a[1]); });
+    [[15,'p15'],[30,'p30']].forEach(function(a){ if(G.score>=a[0]&&award(a[1])) G.newB.push(a[1]); });
+  } else { G.lives--; G.streak=0; if(b) b.classList.add('wrong'); $('sMsg').textContent=(k<0?'Time! ':'')+'It was '+G.cur.name; }
+  SV.bestStreak=Math.max(SV.bestStreak,G.streak); hud();
+  setTimeout(function(){ if(G.lives<=0) over(); else nextSpot(); }, ok?700:1600); }
+function over(){ SV.best=Math.max(SV.best,G.score); persist();
+  $('oText').innerHTML='You spotted <b>'+G.score+'</b> stances!'+(G.newB.length?'<br>New badge'+(G.newB.length>1?'s':'')+'!':''); $('oBadges').innerHTML=badgeHTML(); show('over'); }
+$('goSpot').onclick=startSpot; $('oAgain').onclick=startSpot; $('oHome').onclick=home;
+home();
+window.__dd={S:S,figure:figure,state:function(){return {G:G,SV:SV}}};
+</script></body></html>
