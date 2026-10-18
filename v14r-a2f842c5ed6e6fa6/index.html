@@ -2880,17 +2880,29 @@ function kmFinish(){const K_=KM,a=K_.ao,b=K_.aka;let w=null;
  else if(K_.senshu!==null){w=K_.senshu;K_.why='Tie – Senshu (first score)'}else{w=null;K_.why='Hikiwake (draw) – try again'}
  K_.winner=w;K_.ph='end';K_.t=0;kmSay('Yame!',60);
  if(w===0){ST.kmWins=(ST.kmWins||0)+1;if(a.pens===0)ST.kmClean=1}checkBadges()}
+// v14: contact geometry (same rig as the drawing). Kicks score only with the instep, punches only with the fist (knuckles).
+function kmGeo(f){if(!f.var)return null;const P=rigPose(f),hip=P.hip,S=[hip[0]+Math.sin(P.lean)*RIG.torso,hip[1]-Math.cos(P.lean)*RIG.torso],TN=P.turn||0,px=MX0+f.x*PXM,W_=p=>[px+f.face*p[0],FY+p[1]];
+ const hipF=[hip[0]+5+15*TN,hip[1]-12*TN],[kf,ff]=ikH(hipF,P.ff,RIG.thigh,RIG.shin,P.kfH),sd=[ff[0]-kf[0],ff[1]-kf[1]],sl=Math.hypot(sd[0],sd[1])||1,inst=[ff[0]+sd[0]/sl*9,ff[1]+sd[1]/sl*9];
+ const shF=[S[0]+4+20*TN,S[1]+3+5*TN],shB=[S[0]-3-18*TN,S[1]+1-3*TN],[,lh]=ikE(shF,P.lh,RIG.uarm,RIG.farm,P.efH),[,rh]=ikE(shB,P.rh,RIG.uarm,RIG.farm,P.ebH);
+ const hd=[S[0]+5+P.head[0],S[1]-15+P.head[1]];
+ return {instep:W_(inst),knee:W_(kf),lh:W_(lh),rh:W_(rh),head:W_(hd),bodyTop:W_(S),bodyBot:W_([hip[0],hip[1]+6]),bodyX:px+f.face*((S[0]+hip[0])/2)}}
+function kmZone(pt,o,G){if(!pt||!G)return null;if(Math.hypot(pt[0]-G.head[0],pt[1]-G.head[1])<=19)return 'jodan';
+ if(Math.abs(pt[0]-G.bodyX)<=24&&pt[1]>=G.bodyTop[1]-2&&pt[1]<=G.bodyBot[1])return 'chudan';return null}
 function kmStep(f,o,isAI){
  if(f.cd>0)f.cd--;if(f.sweepWin>0)f.sweepWin--;
  if(f.act==='down'){if(++f.t>70){f.act='idle';f.t=0}return}
  if(f.act==='hit'){if(++f.t>14){f.act='idle';f.t=0}return}
  if(f.mv){f.t++;const m=f.mv;
-  if(f.t>m.s&&f.t<=m.s+m.a&&!f.hitDone){const d=Math.abs(o.x-f.x);if(d<=m.reach){f.hitDone=1;const lbl=(f.act==='punch'&&f.gyaku)?'Gyaku-zuki':m.nm;
+  if(f.t>m.s&&f.t<=m.s+m.a&&!f.hitDone){const d=Math.abs(o.x-f.x),kick=f.act==='bkick'||f.act==='hkick',strike=kick||f.act==='punch';let zone=null,ok=d<=m.reach;
+   if(strike){const G=kmGeo(f),OG=kmGeo(o);ok=false;if(G&&OG){const tip=kick?G.instep:(f.gyaku?G.rh:G.lh);zone=kmZone(tip,o,OG);if(f.act==='hkick'&&zone!=='jodan')zone=null;if(f.act==='bkick'&&zone!=='chudan')zone=null;ok=!!zone;
+     if(!ok&&f.t===m.s+m.a){const closeK=kick&&(kmZone(G.knee,o,OG)||(G.instep[0]-OG.bodyX)*f.face>10),closeP=!kick&&(OG.bodyX-tip[0])*f.face<0;
+      if(closeK||closeP||d<.9){f.hitDone=1;KM.fb={text:'Too close!',x:o.x,t:30};KM.log=(KM.log||[]);KM.log.push({who:f.side?'AKA':'AO',act:f.act,d:+d.toFixed(2),res:'too close, no point'});beep(240,.05)}}}}
+   if(ok){f.hitDone=1;const lbl=(f.act==='punch'&&f.gyaku)?'Gyaku-zuki':m.nm;KM.log=(KM.log||[]);KM.log.push({who:f.side?'AKA':'AO',act:f.act,d:+d.toFixed(2),zone});
     if(f.act==='gpunch'){if(o.act==='down'){kmScore(f,3,lbl);return}}
     else if(o.act==='down'){}
     else if(o.act==='block'&&f.act!=='sweep'){KM.fb={text:'Blocked!',x:o.x,t:30};o.x+=f.face*.15;beep(300,.05)}
     else if(f.act==='sweep'){o.act='down';o.t=0;o.mv=null;f.sweepWin=70;KM.fb={text:'Ashi barai! Follow up!',x:o.x,t:50};beep(200,.1)}
-    else{o.act='hit';o.t=0;o.mv=null;o.x+=f.face*.25;kmScore(f,m.pts,lbl);return}}}
+    else{const pts=kick?(zone==='jodan'?3:2):m.pts,l2=kick?(zone==='jodan'?'Jodan geri':'Chudan geri'):lbl;o.act='hit';o.t=0;o.mv=null;o.x+=f.face*.25;kmScore(f,pts,l2);return}}}
   if(f.t>m.s+m.a+m.r){f.act='idle';f.mv=null;f.t=0;f.cd=isAI?8:4}return}
  // movement / block
  let mvx=0;
@@ -2899,8 +2911,8 @@ function kmStep(f,o,isAI){
   if(o.mv&&o.t===1&&o.act!=='gpunch'&&Math.random()<A.block)f.blockT=o.mv.s+o.mv.a+2;
   if(f.blockT<=0){
    if(o.act==='down'&&f.sweepWin>0){if(Math.abs(d)>1.4)mvx=-.05;else kmAttack(f,'gpunch')}
-   else if(Math.abs(d)<1.7&&Math.random()<A.aggr*3){const r=Math.random();kmAttack(f,r<A.hk?'hkick':r<A.hk+.25?'bkick':r<A.hk+.37?'sweep':'punch');if(Math.random()<A.combo)f.cd=0}
-   else{const want=1.45+Math.sin(frame*.03+KM.lvl)*.25;if(Math.abs(d)>want+.15)mvx=-.04;else if(Math.abs(d)<want-.25)mvx=.04;
+   else if(Math.abs(d)<1.7&&Math.random()<A.aggr*3){/* v14: AI only fires from a range where the fist/instep can land */const r=Math.random(),mv=r<A.hk?'hkick':r<A.hk+.25?'bkick':r<A.hk+.37?'sweep':'punch',KR={punch:[.95,1.25],bkick:[1.15,1.55],hkick:[1.05,1.25],sweep:[0,1.4]}[mv],ad=Math.abs(d);if(ad>=KR[0]&&ad<=KR[1]){kmAttack(f,mv);if(Math.random()<A.combo)f.cd=0}else mvx=ad>KR[1]?-.045:.045}
+   else{const want=1.25+Math.sin(frame*.03+KM.lvl)*.15;if(Math.abs(d)>want+.15)mvx=-.04;else if(Math.abs(d)<want-.25)mvx=.04;
     if(f.x>7.1&&Math.random()<A.smart)mvx=-.045; // smart footwork keeps away from the edge
     if(Math.random()<.02*(1-A.smart))mvx=.06}}}
  if(f.act==='block')mvx*=.3;
@@ -2952,9 +2964,9 @@ function rigPose(f){const K_=KM,ph=f.bph,neutral=K_.ph!=='fight';const A=neutral
  const sv=P.sv;P.ff[0]+=CL(sv,0,9)*1.4-CL(-sv,0,9)*.5;P.bf[0]+=CL(sv,0,9)*.4-CL(-sv,0,9)*1.4;P.lean+=CL(sv*.012,-.06,.06);
  P.head[1]=-b*.25;
  let S=sh();P.lh=[S[0]+46+2*Math.cos(ph),S[1]+6+2*Math.sin(ph)];P.rh=[S[0]+13,S[1]-9+b*.2];
- if(neutral){P.lh=[S[0]+20,S[1]+34];P.rh=[S[0]+8,S[1]+38]}
+ if(neutral){P.lh=[S[0]+30,S[1]-4];P.rh=[S[0]+12,S[1]-9]} // v14: ready/kamae guard at chin height, clear of the belt
  const bow=['rei1','rei2'].includes(K_.ph)||(K_.ph==='end'&&K_.t>150);
- if(bow){P.lean=.62;P.hip[1]=-RIG.hipH+4;P.ff=[14,-6];P.bf=[-14,-6];S=sh();P.lh=[P.hip[0]+12,P.hip[1]+22];P.rh=[P.hip[0]+6,P.hip[1]+24];P.ffA=P.bfA=.1;return P}
+ if(bow){P.lean=.62;P.hip[1]=-RIG.hipH+4;P.ff=[14,-6];P.bf=[-14,-6];S=sh();P.lh=[P.hip[0]+4,P.hip[1]+40];P.rh=[P.hip[0]-2,P.hip[1]+42];P.ffA=P.bfA=.1;return P} // v14: rei with open hands at the sides, below the belt
  const m=f.mv;if(m){const tot=m.s+m.a+m.r,u=f.t/tot,us=m.s/tot,ua=(m.s+m.a)/tot;const e=u<us?EZ(u/us):u<ua?1:1-EZ((u-ua)/(1-ua));
   if(f.act==='punch'&&!f.gyaku){P.hip[0]+=10*e;P.ff[0]+=16*e;P.lean+=.1*e;S=sh();P.lh=L2(P.lh,[S[0]+66,S[1]+2],e)}
   if(f.act==='punch'&&f.gyaku){P.hip[0]+=9*e;P.lean+=.16*e;P.bfA=.48+.3*e;S=sh();P.rh=L2(P.rh,[S[0]+70,S[1]+3],e);P.lh=L2(P.lh,[S[0]+14,S[1]+10],e)}
@@ -2964,15 +2976,15 @@ function rigPose(f){const K_=KM,ph=f.bph,neutral=K_.ph!=='fight';const A=neutral
    const C=hi?[2.0,-1.05]:[1.75,-1.3],X=hi?[2.2,2.3]:[1.75,1.85],base=[P.ff[0],-8];let a1,a2,lift=1,tn=1,pv=1; // v14b mawashi: shin folded horizontally in the chamber, snaps round to the target
    if(u<us){lift=EZ(u/us);tn=lift;pv=.6*lift;a1=C[0];a2=C[1]}else if(u<ua){const k=EZ(CL((u-us)/(ua-us)*2.2,0,1));pv=.6+.4*k;a1=LRP(C[0],X[0],k);a2=LRP(C[1],X[1],k)}
    else{const r=(u-ua)/(1-ua);if(r<.5){const k=EZ(r/.5);tn=pv=1-k;a1=LRP(X[0],C[0],k);a2=LRP(X[1],C[1],k)}else{tn=pv=0;a1=C[0];a2=C[1];lift=1-EZ((r-.5)/.5)}}
-   P.turn=tn;P.bfFlip=Math.cos(pv*Math.PI); // hips open to the camera; support heel turns to the target (about 180 degrees) then back
+   P.turn=Math.min(1,tn*1.25);P.bfFlip=Math.cos(pv*Math.PI);P.lean-=.12*P.turn; // hips open to the camera; support heel turns to the target (about 180 degrees) then back
    const [kn,ft]=FK(a1,a2);P.ff=L2(base,ft,lift);P.kfH=kn;P.kick='ff';P.ffA=null;P.bfA=.2;P.lh=L2(P.lh,[S[0]+26,S[1]-6],e);P.rh=L2(P.rh,[S[0]+12,S[1]-10],e)}
   if(f.act==='sweep'){P.hip[0]+=12*e;P.lean+=.06*e;const p=CL(u/ua,0,1),q=u<ua?EZ(p):1-EZ((u-ua)/(1-ua));P.bf=[LRP(-56,66,q),-6-14*Math.sin(Math.PI*Math.min(1,q))];P.kick='bf';P.bfA=-.05;S=sh();P.lh=L2(P.lh,[S[0]+32,S[1]-6],e);P.rh=L2(P.rh,[S[0]+12,S[1]-11],e)} // v14: guard hands UP at the chin, elbows down
   if(f.act==='gpunch'){P.hip[1]+=26*e;P.lean+=.45*e;P.bf[0]-=6*e;P.bfA=.48+.5*e;S=sh();P.rh=L2(P.rh,[S[0]+56,S[1]+62],e);P.lh=L2(P.lh,[P.hip[0]+12,P.hip[1]-6],e)}} // v14: hikite to the hip
  // 'Studio techniques' toggle: replace the hand-keyed pose with the Forza Technique Studio keyframes (side-plane projection). Visual only; hit windows/scoring unchanged.
- if(STUDIO_TECH.on&&m){const key=f.act==='punch'?(f.gyaku?'gyaku':'kizami'):f.act,T=STUDIO_TECH.map[key];
+ if(STUDIO_TECH.on&&m){const hFF=P.ff,hK=P.kfH;const key=f.act==='punch'?(f.gyaku?'gyaku':'kizami'):f.act,T=STUDIO_TECH.map[key];
   if(T){const tot=m.s+m.a+m.r,R=ForzaTechniqueLoader.toRig2D(T,CL(f.t/tot,0,1),{scale:89}),bx=P.hip[0];
-   P.hip=[R.hip[0]+bx*.3,R.hip[1]-P.b*.5];P.lean=R.lean;P.ff=R.ff;P.bf=R.bf;P.lh=R.lh;P.rh=R.rh;P.kfH=R.knees&&[R.knees[0][0]+bx*.3,R.knees[0][1]-P.b*.5];P.kbH=R.knees&&[R.knees[1][0]+bx*.3,R.knees[1][1]-P.b*.5];P.efH=R.elbows&&R.elbows[0];P.ebH=R.elbows&&R.elbows[1];P.ffA=R.ffA;P.bfA=R.bfFlip!=null&&R.bfFlip<.95?R.bfA2:R.bfA;P.turn=R.turn||0;P.bfFlip=R.bfFlip;P.kick=f.act==='sweep'?'bf':(f.act==='hkick'||f.act==='bkick')?'ff':null;
-   if(f.act==='bkick'){P.ff=[P.ff[0],P.ff[1]*.62];if(P.kfH)P.kfH=[P.kfH[0],P.kfH[1]*.8]}}}
+   P.hip=[R.hip[0]+bx*.3,R.hip[1]-P.b*.5];P.lean=R.lean;P.ff=R.ff;P.bf=R.bf;P.lh=R.lh;P.rh=R.rh;P.kfH=R.knees&&[R.knees[0][0]+bx*.3,R.knees[0][1]-P.b*.5];P.kbH=R.knees&&[R.knees[1][0]+bx*.3,R.knees[1][1]-P.b*.5];P.efH=R.elbows&&R.elbows[0];P.ebH=R.elbows&&R.elbows[1];P.ffA=R.ffA;P.bfA=R.bfFlip!=null&&R.bfFlip<.95?R.bfA2:R.bfA;P.turn=Math.min(1,(R.turn||0)*1.2);P.bfFlip=R.bfFlip;P.lean-=.08*P.turn;P.kick=f.act==='sweep'?'bf':(f.act==='hkick'||f.act==='bkick')?'ff':null;
+   if(f.act==='bkick'||f.act==='hkick'){P.ff=hFF;P.kfH=hK}}} // v14: studio sets the body turn, pivot and arms; the kicking leg path keeps the game's reach so the instep lands on chudan/jodan
  if(f.act==='block'){P.lean-=.24;P.hip[0]-=8;S=sh();P.lh=[S[0]+20,S[1]-24];P.rh=[S[0]+10,S[1]+2]}
  if(f.act==='hit'){const k=1-f.t/14;P.lean-=.16*k;P.hip[0]-=6*k;P.head=[-5*k,0];S=sh();P.lh=[S[0]+26,S[1]-2];P.rh=[S[0]+12,S[1]-8]} // v14: hands stay up after being hit
  return P}
@@ -2994,11 +3006,11 @@ function kmFighterDraw(f){const K_=KM;studioSync();if(!f.var){const r=(f.side?K_
  const sq=1+.018*Math.max(0,Math.cos(f.bph))*(K_.ph==='fight'?1:0);g.scale(sq,1/sq);
  const hip=P.hip,S=[hip[0]+Math.sin(P.lean)*RIG.torso,hip[1]-Math.cos(P.lean)*RIG.torso];
  const GI='#f8f9fb',GIS='#dde2ea',LN='#aab3bf';
- const TN=P.turn||0,hipF=[hip[0]+5+9*TN,hip[1]],hipB=[hip[0]-5-9*TN,hip[1]]; // v14b: hips square to the camera during the round kick
+ const TN=P.turn||0,hipF=[hip[0]+5+15*TN,hip[1]-12*TN],hipB=[hip[0]-5-13*TN,hip[1]+3*TN]; // v14: hips roll over: kicking hip rises above the support hip // v14b: hips square to the camera during the round kick
  const [kb,bf]=ikH(hipB,P.bf,RIG.thigh,RIG.shin,P.kbH),[kf,ff]=ikH(hipF,P.ff,RIG.thigh,RIG.shin,P.kfH);
  const shinAng=(k,a)=>Math.atan2(a[1]-k[1],a[0]-k[0])-Math.PI/2; // instep in line with the shin (toes lead along the kick)
  const ffA=P.ffA==null?shinAng(kf,ff)+.15:P.ffA;
- const shF=[S[0]+4+12*TN,S[1]+3],shB=[S[0]-3-12*TN,S[1]+1]; // both shoulders visible when front-on
+ const shF=[S[0]+4+20*TN,S[1]+3+5*TN],shB=[S[0]-3-18*TN,S[1]+1-3*TN]; // both shoulders visible when front-on
  const [eb,rh]=ikE(shB,P.rh,RIG.uarm,RIG.farm,P.ebH),[ef,lh]=ikE(shF,P.lh,RIG.uarm,RIG.farm,P.efH);
  const LN2='#5c6678',PT=(a,b,t)=>[LRP(a[0],b[0],t),LRP(a[1],b[1],t)],GIK='#cdd5e2';
  const MITT=(h,e)=>{const d=Math.atan2(h[1]-e[1],h[0]-e[0]);g.save();g.translate(h[0],h[1]);g.rotate(d);g.fillStyle=INK;g.beginPath();g.ellipse(2,0,12,10.5,0,0,7);g.fill();g.fillStyle=col;g.beginPath();g.ellipse(2,0,10,8.5,0,0,7);g.fill();g.fillStyle='#0003';g.beginPath();g.ellipse(2,3.5,9,4.5,0,0,Math.PI);g.fill();g.fillStyle='#fff5';g.beginPath();g.ellipse(4,-4,4,2,0,0,7);g.fill();g.fillStyle=col;g.strokeStyle=INK;g.lineWidth=2;g.beginPath();g.rect(-12,-6,6,12);g.fill();g.stroke();g.restore()}; // WKF fist mitt with cuff
@@ -3013,7 +3025,7 @@ function kmFighterDraw(f){const K_=KM;studioSync();if(!f.var){const r=(f.side?K_
  ARM(shB,eb,rh,GIS);LEG(hipB,kb,bf,P.bfA,GIS,P.bfFlip);
  // jacket: broad shoulders, slim waist, skirt hanging below the belt
  const nx=Math.cos(P.lean),ny=Math.sin(P.lean);
- const JW=1+.55*TN;g.beginPath();g.moveTo(S[0]-15*JW*nx,S[1]-15*ny);g.lineTo(S[0]+19*JW*nx,S[1]+19*ny);g.lineTo(hip[0]+14+6*TN,hip[1]-3);g.lineTo(hip[0]+22+6*TN,hip[1]+30);g.lineTo(hip[0]-21-6*TN,hip[1]+30);g.lineTo(hip[0]-14-6*TN,hip[1]-3);g.closePath();g.fillStyle=GI;g.fill();g.strokeStyle=INK;g.lineWidth=2.6;g.lineJoin='round';g.stroke();
+ const JW=1+.95*TN;g.beginPath();g.moveTo(S[0]-15*JW*nx,S[1]-15*ny);g.lineTo(S[0]+19*JW*nx,S[1]+19*ny);g.lineTo(hip[0]+14+12*TN,hip[1]-3-8*TN);g.lineTo(hip[0]+22+12*TN,hip[1]+30-10*TN);g.lineTo(hip[0]-21-12*TN,hip[1]+30+2*TN);g.lineTo(hip[0]-14-12*TN,hip[1]-3+2*TN);g.closePath();g.fillStyle=GI;g.fill();g.strokeStyle=INK;g.lineWidth=2.6;g.lineJoin='round';g.stroke();
  g.fillStyle=GIK;g.beginPath();g.moveTo(S[0]-15*nx,S[1]-15*ny);g.lineTo(hip[0]-14,hip[1]-3);g.lineTo(hip[0]-21,hip[1]+30);g.lineTo(hip[0]-9,hip[1]+30);g.lineTo(hip[0]-5,hip[1]);g.lineTo(S[0]-8*nx,S[1]-8*ny);g.closePath();g.fill(); // cel shadow on the back half
  g.strokeStyle=LN2;g.lineWidth=1.2;g.beginPath();g.moveTo(hip[0]+4,hip[1]+4);g.lineTo(hip[0]+7,hip[1]+30);g.moveTo(hip[0]-12,hip[1]+12);g.lineTo(hip[0]-14,hip[1]+29);g.stroke(); // skirt overlap + fold
  g.fillStyle=skin;g.beginPath();g.moveTo(S[0]+1,S[1]-1);g.lineTo(S[0]+10*nx+3,S[1]+10*ny);g.lineTo(S[0]+6+Math.sin(P.lean)*18,S[1]+18);g.closePath();g.fill();
@@ -3046,16 +3058,17 @@ function kmFighterDraw(f){const K_=KM;studioSync();if(!f.var){const r=(f.side?K_
  g.lineWidth=1.3;g.beginPath();g.moveTo(hd[0]+11.6,hd[1]+2);g.lineTo(hd[0]+12.6,hd[1]+5);g.stroke(); // nose
  g.lineWidth=1.5;g.beginPath();g.moveTo(hd[0]+6.5,hd[1]+8.2);g.lineTo(hd[0]+10,hd[1]+7.8);g.stroke(); // set, focused mouth
  g.restore();
- // lead arm in front
- ARM(shF,ef,lh,GI);
  // belt: band over the jacket, knot at the front, two tails on a damped pendulum lagging the hips
  {const hx=hip[0]+f.x*PXM*f.face,hy=hip[1],B=f.belt||(f.belt={a:[.1,.25],v:[0,0],px:hx,py:hy,vx:0,vy:0});
   const vx=hx-B.px,vy=hy-B.py,ax=vx-B.vx,ay=vy-B.vy;B.px=hx;B.py=hy;B.vx=vx;B.vy=vy;
-  for(let i=0;i<2;i++){const rest=.12+i*.22-CL(vx*.03,-.5,.5),k=.09,d=.14+i*.03;B.v[i]+=-k*(B.a[i]-rest)-d*B.v[i]-ax*.05*(1+i*.3)+ay*.02*Math.sin(B.a[i]);B.v[i]=CL(B.v[i],-.25,.25);B.a[i]=CL(B.a[i]+B.v[i],-1.3,1.3)}
-  g.save();g.translate(hip[0],hip[1]-3);g.rotate(P.lean*.35);g.fillStyle=col;g.strokeStyle='#0005';g.lineWidth=1;
+  for(let i=0;i<2;i++){const rest=.12+i*.22-CL(vx*.03,-.5,.5),k=.09,d=.14+i*.03;B.v[i]+=-k*(B.a[i]-rest)-d*B.v[i]-ax*.05*(1+i*.3)+ay*.02*Math.sin(B.a[i]);B.v[i]=CL(B.v[i],-.25,.25);B.a[i]=CL(B.a[i]+B.v[i],-.12,1.25)} // v14: tails hang down and away from the guard hands
+  g.save();g.translate(hip[0],hip[1]-3-4*TN);g.rotate(P.lean*.35-.28*TN);g.fillStyle=col;g.strokeStyle='#0005';g.lineWidth=1;
   g.strokeStyle=INK;g.lineWidth=1.8;g.beginPath();g.rect(-15-8*TN,-4.5,31+16*TN,9);g.fill();g.stroke();
   const TL=[36,41];for(let i=0;i<2;i++){g.save();g.translate(13*(1-TN),3);g.rotate(B.a[i]);g.beginPath();g.moveTo(-3,0);g.lineTo(3,0);g.lineTo(3.6,TL[i]);g.lineTo(-3.6,TL[i]-1.5);g.closePath();g.fill();g.stroke();g.restore()} // long tails hanging to mid-thigh
   g.beginPath();g.ellipse(13*(1-TN),1,6,5.5,0,0,7);g.fill();g.stroke();g.restore()}
+ // lead arm in front (drawn after the belt so the belt never wraps the arms)
+ ARM(shF,ef,lh,GI);
+
   if(SPD){g.strokeStyle='rgba(255,255,255,.85)';g.lineCap='round';for(let i=0;i<6;i++){const y=-150+i*22+(f.act==='sweep'?90:0)-(f.act==='hkick'?40:0),x0=-40-(i%2)*18;g.lineWidth=i%3?2:3;g.beginPath();g.moveTo(x0,y);g.lineTo(x0-38-(i*13%25),y);g.stroke()}} // manga speed lines
  g.restore();
  if(f.act==='hit')txt('💫',px,FY-196,20);
