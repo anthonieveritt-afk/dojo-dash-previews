@@ -2867,7 +2867,8 @@ function startKumite(lvl,practice){lvl=Math.max(KUMITE_FROM,Math.min(GRADES.leng
  state='kumite';for(const k in KMH)KMH[k]=0;beep(440,.15,'sine')}
 function kmSay(text,t=70){KM.say={text,t}}
 function kmReset(){const K_=KM;for(const f of [K_.ao,K_.aka]){f.x=f.side?5:3;f.act='idle';f.t=0;f.mv=null;f.cd=10;f.sweepWin=0;f.blockT=0}K_.ref.x=4}
-function kmAttack(f,mv){if(KM.ph!=='fight'||['punch','bkick','hkick','sweep','gpunch','hit','down'].includes(f.act)||f.cd>0){if(!f.side){KM.buf=12}return false}KM.buf=0;f.act=mv;f.mv=MOVES[mv];f.t=0;f.hitDone=0;if(mv==='punch'){f.gyaku=!f.gyaku}beep(mv==='punch'?520:mv==='sweep'?300:420,.05);return true}
+const KMR={punch:[.95,1.25],bkick:[1.15,1.55],hkick:[1.05,1.25],sweep:[.9,1.4]}; // v14: ranges where the fist/instep can land
+function kmAttack(f,mv){if(KM.ph!=='fight'||['punch','bkick','hkick','sweep','gpunch','hit','down'].includes(f.act)||f.cd>0){if(!f.side){KM.buf=12}return false}KM.buf=0;f.act=mv;f.mv=MOVES[mv];f.t=0;f.hitDone=0;{const o=f.side?KM.ao:KM.aka,ad=Math.abs(o.x-f.x),r=KMR[mv];f.lunge=r&&ad>r[1]&&ad<r[1]+.5?(ad-(r[0]+r[1])/2)/f.mv.s:0} /* step in (yori-ashi) during the set-up so techniques start from a realistic distance */if(mv==='punch'){f.gyaku=!f.gyaku}beep(mv==='punch'?520:mv==='sweep'?300:420,.05);return true}
 function kmPlayerAttack(){const o=KM.aka,f=KM.ao;if(o.act==='down'&&f.sweepWin>0)return kmAttack(f,'gpunch');kmAttack(f,KMH.u?'hkick':KMH.d?'sweep':KMH.r?'bkick':'punch')}
 function kmScore(f,pts,how){const K_=KM;K_.flash={x:MX0+f.x*PXM+f.face*72,y:FY-(pts>=3?150:pts==2?105:125),t:0,pts};f.score+=pts;if(K_.senshu===null)K_.senshu=f.side;K_.ph='yame';K_.t=0;K_.ref.arm={side:f.side,pts};
  kmSay('Yame! '+(f.side?'AKA':'AO')+' – '+how+' · '+PTSNM[pts]+' ('+pts+')',90);beep(f.side?220:880,.15);
@@ -2892,7 +2893,7 @@ function kmStep(f,o,isAI){
  if(f.cd>0)f.cd--;if(f.sweepWin>0)f.sweepWin--;
  if(f.act==='down'){if(++f.t>70){f.act='idle';f.t=0}return}
  if(f.act==='hit'){if(++f.t>14){f.act='idle';f.t=0}return}
- if(f.mv){f.t++;const m=f.mv;
+ if(f.mv){f.t++;const m=f.mv;if(f.lunge&&f.t<=m.s)f.x+=f.face*f.lunge;
   if(f.t>m.s&&f.t<=m.s+m.a&&!f.hitDone){const d=Math.abs(o.x-f.x),kick=f.act==='bkick'||f.act==='hkick',strike=kick||f.act==='punch';let zone=null,ok=d<=m.reach;
    if(strike){const G=kmGeo(f),OG=kmGeo(o);ok=false;if(G&&OG){const tip=kick?G.instep:(f.gyaku?G.rh:G.lh);zone=kmZone(tip,o,OG);if(f.act==='hkick'&&zone!=='jodan')zone=null;if(f.act==='bkick'&&zone!=='chudan')zone=null;ok=!!zone;
      if(!ok&&f.t===m.s+m.a){const closeK=kick&&(kmZone(G.knee,o,OG)||(G.instep[0]-OG.bodyX)*f.face>10),closeP=!kick&&(OG.bodyX-tip[0])*f.face<0;
@@ -2911,8 +2912,8 @@ function kmStep(f,o,isAI){
   if(o.mv&&o.t===1&&o.act!=='gpunch'&&Math.random()<A.block)f.blockT=o.mv.s+o.mv.a+2;
   if(f.blockT<=0){
    if(o.act==='down'&&f.sweepWin>0){if(Math.abs(d)>1.4)mvx=-.05;else kmAttack(f,'gpunch')}
-   else if(Math.abs(d)<1.7&&Math.random()<A.aggr*3){/* v14: AI only fires from a range where the fist/instep can land */const r=Math.random(),mv=r<A.hk?'hkick':r<A.hk+.25?'bkick':r<A.hk+.37?'sweep':'punch',KR={punch:[.95,1.25],bkick:[1.15,1.55],hkick:[1.05,1.25],sweep:[0,1.4]}[mv],ad=Math.abs(d);if(ad>=KR[0]&&ad<=KR[1]){kmAttack(f,mv);if(Math.random()<A.combo)f.cd=0}else mvx=ad>KR[1]?-.045:.045}
-   else{const want=1.25+Math.sin(frame*.03+KM.lvl)*.15;if(Math.abs(d)>want+.15)mvx=-.04;else if(Math.abs(d)<want-.25)mvx=.04;
+   else if(Math.abs(d)<1.7&&Math.random()<A.aggr*3){/* v14: AI only fires from a range where the fist/instep can land */const r=Math.random(),mv=r<A.hk?'hkick':r<A.hk+.25?'bkick':r<A.hk+.37?'sweep':'punch',KR=KMR[mv],ad=Math.abs(d);if(ad>=KR[0]&&ad<=KR[1]+.45){kmAttack(f,mv);if(Math.random()<A.combo)f.cd=0}else mvx=ad>KR[1]?-.045:.045}
+   else{const want=1.6+Math.sin(frame*.03+KM.lvl)*.12; /* v14: rest at a realistic gap, step in to attack */if(Math.abs(d)>want+.15)mvx=-.04;else if(Math.abs(d)<want-.25)mvx=.04;
     if(f.x>7.1&&Math.random()<A.smart)mvx=-.045; // smart footwork keeps away from the edge
     if(Math.random()<.02*(1-A.smart))mvx=.06}}}
  if(f.act==='block')mvx*=.3;
@@ -2958,13 +2959,13 @@ function rigFoot(ank,ang,col,fl){g.save();g.translate(ank[0],ank[1]);if(fl!=null
  g.beginPath();g.moveTo(-7,-6);g.lineTo(10,-6);g.quadraticCurveTo(18,-4,18,3);g.lineTo(17,7);g.lineTo(4,7);g.lineTo(-3,4);g.quadraticCurveTo(-9,-1,-7,-6);g.closePath();g.fillStyle=col;g.fill();g.strokeStyle=INK;g.lineWidth=2;g.stroke();
  g.fillStyle='#fff3';g.fillRect(-2,-4,12,2.5);g.restore()}
 function rigPose(f){const K_=KM,ph=f.bph,neutral=K_.ph!=='fight';const A=neutral?1.6:4.2*f.var.amp;
- const b=A*(.5-.5*Math.cos(ph));const P={hip:[2*Math.sin(ph*.5)+f.var.shift,-RIG.hipH+11-b],lean:.14,ff:[52*f.var.st,-8],bf:[-56*f.var.st,-8],ffA:.12,bfA:.2,head:[0,0],sv:f.sv||0,b,A,kick:null,lhUp:0};
+ const b=A*(.5-.5*Math.cos(ph));const P={hip:[2*Math.sin(ph*.5)+f.var.shift,-RIG.hipH+3-b*.7],lean:.1,ff:[33*f.var.st,-8],bf:[-38*f.var.st,-8],ffA:.12,bfA:.2, /* v14: natural upright WKF kamae: ~1.5 shoulder widths long, hips ~88% of standing height */head:[0,0],sv:f.sv||0,b,A,kick:null,lhUp:0};
  const sh=()=>[P.hip[0]+Math.sin(P.lean)*RIG.torso,P.hip[1]-Math.cos(P.lean)*RIG.torso];
  // yori-ashi: front foot leads when advancing, back foot leads when retreating, then the other slides to restore the stance
  const sv=P.sv;P.ff[0]+=CL(sv,0,9)*1.4-CL(-sv,0,9)*.5;P.bf[0]+=CL(sv,0,9)*.4-CL(-sv,0,9)*1.4;P.lean+=CL(sv*.012,-.06,.06);
  P.head[1]=-b*.25;
- let S=sh();P.lh=[S[0]+46+2*Math.cos(ph),S[1]+6+2*Math.sin(ph)];P.rh=[S[0]+13,S[1]-9+b*.2];
- if(neutral){P.lh=[S[0]+30,S[1]-4];P.rh=[S[0]+12,S[1]-9]} // v14: ready/kamae guard at chin height, clear of the belt
+ let S=sh();P.lh=[S[0]+42+2*Math.cos(ph),S[1]+10+2*Math.sin(ph)];P.rh=[S[0]+21,S[1]+11+b*.2]; // lead hand forward at shoulder/chin height, rear fist under the chin (face stays visible)
+ if(neutral){P.lh=[S[0]+40,S[1]+10];P.rh=[S[0]+21,S[1]+12]} // v14: ready/kamae guard at chin height, clear of the belt
  const bow=['rei1','rei2'].includes(K_.ph)||(K_.ph==='end'&&K_.t>150);
  if(bow){P.lean=.62;P.hip[1]=-RIG.hipH+4;P.ff=[14,-6];P.bf=[-14,-6];S=sh();P.lh=[P.hip[0]+4,P.hip[1]+40];P.rh=[P.hip[0]-2,P.hip[1]+42];P.ffA=P.bfA=.1;return P} // v14: rei with open hands at the sides, below the belt
  const m=f.mv;if(m){const tot=m.s+m.a+m.r,u=f.t/tot,us=m.s/tot,ua=(m.s+m.a)/tot;const e=u<us?EZ(u/us):u<ua?1:1-EZ((u-ua)/(1-ua));
@@ -3074,7 +3075,7 @@ function kmFighterDraw(f){const K_=KM;studioSync();if(!f.var){const r=(f.side?K_
  if(f.act==='hit')txt('💫',px,FY-196,20);
  txt(f.side?'AKA':'AO',px,FY-212,14,f.side?'#ff8a80':'#82b1ff')}
 function KM_OSKIN(){return OPPSKIN[KM.lvl%OPPSKIN.length]}function KM_OHAIR(){return OPPHAIR[(KM.lvl*3)%OPPHAIR.length]}
-function kmRefDraw(){const R=KM.ref,px=MX0+R.x*PXM,y=FY-14;g.save();g.translate(px+Math.sin(frame*.035)*2.5,y);g.rotate(Math.sin(frame*.035)*.015);g.scale(.92,.92);
+function kmRefDraw(){const R=KM.ref,px=MX0+R.x*PXM,y=FY-40;g.save();g.translate(px+Math.sin(frame*.035)*2.5,y);g.rotate(Math.sin(frame*.035)*.015);g.scale(.72,.72); /* v14: referee stands back (smaller, further up the mat) */
  g.strokeStyle='#263238';g.lineWidth=13;g.lineCap='round';g.beginPath();g.moveTo(-6,-66);g.lineTo(-10,0);g.moveTo(6,-66);g.lineTo(10,0);g.stroke();
  rr(-17,-122,34,60,8,'#111');g.fillStyle='#fff';g.beginPath();g.moveTo(-6,-122);g.lineTo(6,-122);g.lineTo(0,-104);g.fill();g.fillStyle='#d32f2f';g.fillRect(-2,-120,4,14);
  const arm=(dir,ang,up)=>{const L=48,ex=dir*Math.cos(ang)*L,ey=-112-Math.sin(ang)*L;g.strokeStyle='#111';g.lineWidth=10;g.beginPath();g.moveTo(dir*12,-114);g.lineTo(ex,ey);g.stroke();g.beginPath();g.arc(ex,ey,6,0,7);g.fillStyle='#ffcc80';g.fill()};
