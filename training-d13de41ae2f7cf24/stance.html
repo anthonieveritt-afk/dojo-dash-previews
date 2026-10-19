@@ -4,7 +4,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Dojo Dash – Stance Training – PREVIEW</title>
 <!-- PREVIEW PROTOTYPE – not published. Forza Karate Club. Local saving only (localStorage), no accounts, no online features.
-     ⚠ STANCE DETAILS NEED CONFIRMING BY CLUB OPERATIONS AGAINST THE FORZA SYLLABUS (lengths, weight splits, foot angles). -->
+     Stance data revised 19 Oct 2026 per club-operations-stance-review.md. Items marked 'pend' are PENDING ANTHONI and not final. Kokutsu and fudo dachi are hidden. -->
 <style>
 :root{--red:#b71c1c;--cream:#fff8e1;--ink:#1a1a1a;--gold:#ffd600}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -35,9 +35,9 @@ footer{font-size:12px;color:#666;padding:10px;text-align:center}
 </style></head><body>
 <header><a href="index.html" aria-label="Back to training hub">⬅</a><h1>DOJO DASH · Stance Training</h1></header>
 <main>
-<div class="warn">⚠ Preview: stance details (lengths, weight splits, foot angles) <b>need confirming by Club Operations against the Forza syllabus</b>.</div>
+<div class="warn">⚠ Preview, updated 19 Oct 2026 after the Club Operations review against the Forza syllabus (itself a draft). Anything marked <b>“pending Anthoni”</b> is not final.</div>
 <section id="home"><div class="panel" style="text-align:center">
-  <h2>Dachi — Stances</h2><p>Strong stances make strong karate! Learn all 9 stances, then test your eyes in Spot it.</p>
+  <h2>Dachi — Stances</h2><p>Strong stances make strong karate! Learn all 8 stances, then test your eyes in Spot it.</p>
   <button class="btn alt" id="goLearn">📖 Learn</button><button class="btn" id="goSpot">⏱ Spot it!</button>
   <p id="bestLine" style="font-weight:bold"></p><div class="badges" id="badges"></div></div></section>
 <section id="learn" class="hide"><div class="panel">
@@ -62,26 +62,29 @@ footer{font-size:12px;color:#666;padding:10px;text-align:center}
 // STANCE DATA — needs confirming by Club Operations against the Forza syllabus.
 // view: 'front' or 'side' (facing right). Legs: [hip, knee, ankle] per leg; feet: top-view [x,y,angleDeg,tiptoe].
 var S=[
- {id:'heiko',name:'Heiko dachi',en:'Parallel stance',view:'front',hip:[120,168],legs:[[[108,168],[104,218],[100,266]],[[132,168],[136,218],[140,266]]],w:[50,50],
-  feet:[[95,55,0],[145,55,0]],pts:['Feet shoulder-width apart','Feet parallel, toes pointing forwards','Knees soft, not locked','Weight even: 50 / 50']},
- {id:'musubi',name:'Musubi dachi',en:'Formal / attention stance',view:'front',hip:[120,166],legs:[[[112,166],[114,216],[116,266]],[[128,166],[126,216],[124,266]]],w:[50,50],toeOut:28,
-  feet:[[110,58,-28],[130,58,28]],pts:['Heels together','Toes open in a V (about 45° between the feet)','Stand tall, ready to bow','Weight even: 50 / 50']},
- {id:'kiba',name:'Kiba dachi',en:'Horse-riding stance',view:'front',hip:[120,196],legs:[[[106,196],[66,226],[62,266]],[[134,196],[174,226],[178,266]]],w:[50,50],
-  feet:[[60,55,0],[180,55,0]],pts:['Wide: about two shoulder-widths','Feet parallel, toes forwards (or slightly in)','Knees bent and pushed out over the feet','Back straight, hips low','Weight even: 50 / 50']},
- {id:'shiko',name:'Shiko dachi',en:'Square / sumo stance',view:'front',hip:[120,204],legs:[[[106,204],[60,226],[58,266]],[[134,204],[180,226],[182,266]]],w:[50,50],toeOut:45,
-  feet:[[55,55,-45],[185,55,45]],pts:['Wide like kiba dachi','Toes turned out about 45°','Knees pushed out over the toes','Hips low, back straight','Weight even: 50 / 50']},
- {id:'sanchin',name:'Sanchin dachi',en:'Hourglass stance',view:'front',hip:[120,170],legs:[[[110,170],[112,220],[98,264]],[[130,170],[128,218],[142,262]]],w:[50,50],toeIn:15,
-  feet:[[95,72,15],[140,42,-15]],pts:['Front foot toes level with back heel','Feet shoulder-width, toes turned slightly in','Knees squeezed gently inwards','Hips tucked under','Weight even: 50 / 50']},
- {id:'zenkutsu',name:'Zenkutsu dachi',en:'Front stance',view:'side',hip:[118,190],legs:[[[112,190],[80,228],[50,266]],[[124,190],[188,222],[190,266]]],w:[40,60],
-  feet:[[95,88,-25],[140,22,0]],pts:['Long stance: front knee over the toes','Back leg straight, back heel down','Front foot points forwards','Hips facing the front','Weight about 60 front / 40 back']},
- {id:'kokutsu',name:'Kokutsu dachi',en:'Back stance',view:'side',hip:[98,186],legs:[[[94,186],[96,226],[70,266]],[[102,186],[150,226],[172,266]]],w:[70,30],
-  feet:[[100,82,-90],[105,22,0]],pts:['Back knee bent and pushed out','Front leg lightly bent, front foot points forwards','Feet make an L shape','Most weight on the back leg: about 70 back / 30 front']},
- {id:'neko',name:'Neko ashi dachi',en:'Cat stance',view:'side',hip:[100,182],legs:[[[96,182],[124,224],[94,266]],[[104,182],[142,222],[150,262]]],w:[90,10],tiptoe:true,
-  feet:[[100,75,-30],[112,30,0,1]],pts:['Short stance, back knee well bent','Front heel raised, only the ball of the foot touches','Front foot points forwards','Almost all weight on the back leg: about 90 / 10']},
- {id:'fudo',name:'Fudo dachi',en:'Rooted stance',view:'side',hip:[120,196],legs:[[[114,196],[78,232],[56,266]],[[126,196],[176,228],[186,266]]],w:[50,50],
-  feet:[[92,86,-40],[140,24,-10]],pts:['Long like zenkutsu, low like kiba','Both knees bent and pushed out','Front foot forwards, back foot turned out','Weight even: 50 / 50']}
-];
-var BELT='#ff9800';
+ // Beginner stances (Stripe 3, white belt): Anthoni's own words [S1]. Arms down, not a guard.
+ {id:'formal',name:'Formal stance',jp:'Heisoku dachi',pend:'Japanese name pending Anthoni (heisoku or musubi?)',en:'Heels and toes together',view:'front',beginner:true,arms:'down',hip:[120,166],legs:[[[114,166],[116,216],[116,266]],[[126,166],[124,216],[124,266]]],w:[50,50],
+  feet:[[111,58,0],[129,58,0]],pts:['Heels together, toes together','Stand tall, arms down by your sides','Ready to bow','Weight even: 50 / 50']},
+ {id:'attention',name:'Attention stance',jp:'Musubi dachi',pend:'Japanese name pending Anthoni',en:'Heels together, toes apart',view:'front',beginner:true,arms:'down',hip:[120,166],legs:[[[112,166],[114,216],[116,266]],[[128,166],[126,216],[124,266]]],w:[50,50],toeOut:28,
+  feet:[[110,58,-28],[130,58,28]],pts:['Heels together, toes apart','Stand tall, arms down by your sides','Weight even: 50 / 50']},
+ {id:'ready',name:'Ready stance',jp:'Hachiji dachi',pend:'Name and toe angle pending Anthoni (hachiji, heiko or shizen tai?)',en:'Feet apart, fists by your sides',view:'front',beginner:true,arms:'fists',hip:[120,168],legs:[[[108,168],[104,218],[100,266]],[[132,168],[136,218],[140,266]]],w:[50,50],
+  feet:[[95,55,0],[145,55,0]],pts:['Feet apart, about shoulder-width','Fists resting by your sides','Weight even: 50 / 50']},
+ {id:'shiko',name:'Sumo stance',jp:'Shiko dachi',en:'Squat with your feet wide',view:'front',beginner:true,arms:'fists',hip:[120,204],legs:[[[106,204],[60,226],[58,266]],[[134,204],[180,226],[182,266]]],w:[50,50],toeOut:45,
+  feet:[[55,55,-45],[185,55,45]],pts:['Squat with your feet wide','Toes out at 45°','Heels flat','Knees bent, pushed out over the toes','Back straight','Weight even: 50 / 50']},
+ {id:'kiba',name:'Horse riding stance',jp:'Kiba dachi',pend:'Wado: naihanchi dachi. Which name comes first is pending Anthoni',en:'Like sumo, feet pointing forwards',view:'front',beginner:true,arms:'fists',hip:[120,196],legs:[[[106,196],[66,226],[62,266]],[[134,196],[174,226],[178,266]]],w:[50,50],
+  feet:[[60,55,0],[180,55,0]],pts:['Like sumo stance, but feet pointing forwards','Outside edges of the feet parallel','About two shoulder-widths, same width as sumo stance','Knees bent and pushed out','Weight even: 50 / 50']},
+ // Later grades (Wado names from the syllabus draft, pending Anthoni). Guard hands up, elbows down.
+ {id:'junzuki',name:'Junzuki dachi',jp:'Forward stance',pend:'Name pending Anthoni (called zenkutsu dachi in other styles)',en:'Forward stance',view:'side',hip:[122,184],legs:[[[116,184],[86,224],[62,266]],[[128,184],[176,222],[180,266]]],w:[40,60],
+  feet:[[100,84,-25],[140,26,0]],pts:['Front knee bent over the toes','A natural length (not as long and low as other styles)','Back leg nearly straight, back foot points diagonally forward','Front foot points forwards','Weight about 60 front / 40 back']},
+ {id:'neko',name:'Neko ashi dachi',jp:'Cat stance',pend:'Weight split pending Anthoni (70/30, 80/20 or 90/10?)',en:'Cat stance',view:'side',hip:[100,182],legs:[[[96,182],[124,224],[94,266]],[[104,182],[142,222],[150,262]]],w:[70,30],tiptoe:true,
+  feet:[[100,75,-45],[112,30,0,1]],pts:['Short stance, both knees bent','Front heel raised, only the ball of the foot touches','Front leg light so it can lift or turn easily','Back foot at about 45°','Most of your weight on the back leg (about 70 / 30)']},
+ {id:'seishan',name:'Seishan dachi',jp:'Hourglass stance',pend:'Replaces sanchin dachi (not in the syllabus). Pending Anthoni',en:'Wado hourglass stance',view:'front',hip:[120,176],legs:[[[108,176],[104,222],[92,266]],[[132,176],[136,222],[148,262]]],w:[50,50],toeIn:12,
+  feet:[[92,70,12],[148,46,-12]],pts:['Feet about shoulder-width, a step apart','Feet turned slightly in','Legs slightly bent','Weight even: 50 / 50']},
+ // Hidden until Anthoni decides (not in the Forza syllabus / ambiguous name):
+ {id:'kokutsu',hidden:true,name:'Kokutsu dachi',en:'Back stance (other styles)',view:'side',hip:[98,186],legs:[[[94,186],[96,226],[70,266]],[[102,186],[150,226],[172,266]]],w:[70,30],feet:[[100,82,-90],[105,22,0]],pts:['Other styles only']},
+ {id:'fudo',hidden:true,name:'Fudo dachi',en:'Pending Anthoni: ready stance or rooted stance?',view:'side',hip:[120,196],legs:[[[114,196],[78,232],[56,266]],[[126,196],[176,228],[186,266]]],w:[50,50],feet:[[92,86,-40],[140,24,-10]],pts:['Pending Anthoni']}
+].filter(function(s){return !s.hidden;});
+
 function limb(p,w){ var d='M'+p.map(function(q){return q.join(',')}).join(' L');
   return '<path d="'+d+'" stroke="#1a1a1a" stroke-width="'+(w+6)+'" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="'+d+'" stroke="#fdfdfd" stroke-width="'+w+'" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'; }
 function foot(a,dir,tip){ // side view: dir=+1 toes right. front view: dir = angle in degrees
@@ -91,7 +94,7 @@ function foot(a,dir,tip){ // side view: dir=+1 toes right. front view: dir = ang
   if(tip) return '<path d="M'+(x-4)+','+(y+2)+' L'+(x+18)+','+(y+10)+'" stroke="#1a1a1a" stroke-width="12" stroke-linecap="round"/><path d="M'+(x-4)+','+(y+2)+' L'+(x+18)+','+(y+10)+'" stroke="#ffcc80" stroke-width="7" stroke-linecap="round"/>';
   return '<path d="M'+(x-8)+','+(y+6)+' L'+(x+20*dir)+','+(y+6)+'" stroke="#1a1a1a" stroke-width="13" stroke-linecap="round"/><path d="M'+(x-8)+','+(y+6)+' L'+(x+20*dir)+','+(y+6)+'" stroke="#ffcc80" stroke-width="8" stroke-linecap="round"/>'; }
 function figure(s,showMarks){
-  var h=s.hip, side=s.view==='side', sh=[h[0]+(side?6:0),h[1]-78], o='';
+  var BELT=s.beginner?'#ffffff':'#ff9800'; var h=s.hip, side=s.view==='side', sh=[h[0]+(side?6:0),h[1]-78], o='';
   o+='<rect x="0" y="0" width="240" height="300" fill="#fff8e1"/><path d="M0,272 H240" stroke="#8d6e63" stroke-width="4"/>';
   o+='<text x="120" y="22" text-anchor="middle" font-size="11" fill="#b71c1c" font-weight="bold">FORZA KARATE CLUB</text>';
   // far arm (behind) in side view
@@ -112,6 +115,7 @@ function figure(s,showMarks){
   o+='<rect x="'+(kx-5)+'" y="'+(h[1]-12)+'" width="10" height="12" rx="2" fill="'+BELT+'" stroke="#1a1a1a" stroke-width="2.5"/><path d="M'+(kx-2)+','+(h[1])+' l-6,20 M'+(kx+2)+','+h[1]+' l6,19" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round"/><path d="M'+(kx-2)+','+(h[1])+' l-6,20 M'+(kx+2)+','+h[1]+' l6,19" stroke="'+BELT+'" stroke-width="3.5" stroke-linecap="round"/>';
   // near arm(s): guard — elbows down, fists up at chin height
   if(side) o+=limb([[sh[0]+2,sh[1]+6],[sh[0]+20,sh[1]+42],[sh[0]+40,fistY]],13)+'<circle cx="'+(sh[0]+42)+'" cy="'+fistY+'" r="8" fill="#ffcc80" stroke="#1a1a1a" stroke-width="3"/><circle cx="'+(sh[0]+32)+'" cy="'+(fistY+5)+'" r="7" fill="#ffcc80" stroke="#1a1a1a" stroke-width="3"/>';
+  else if(s.arms) [-1,1].forEach(function(d){ var sx=sh[0]+d*22, fx=sx+d*(s.arms==='down'?4:6), fy=sh[1]+80; o+=limb([[sx,sh[1]+6],[sx+d*4,sh[1]+42],[fx,fy-6]],13)+(s.arms==='fists'?'<circle cx="'+fx+'" cy="'+fy+'" r="8" fill="#ffcc80" stroke="#1a1a1a" stroke-width="3"/>':'<ellipse cx="'+fx+'" cy="'+(fy+2)+'" rx="6" ry="10" fill="#ffcc80" stroke="#1a1a1a" stroke-width="3"/>'); });
   else [-1,1].forEach(function(d){ var sx=sh[0]+d*22; o+=limb([[sx,sh[1]+6],[sx+d*6,sh[1]+44],[sh[0]+d*12,fistY]],13)+'<circle cx="'+(sh[0]+d*12)+'" cy="'+fistY+'" r="8" fill="#ffcc80" stroke="#1a1a1a" stroke-width="3"/>'; });
   // head (manga style)
   var hx=sh[0]+(side?4:0), hy=sh[1]-24;
@@ -122,10 +126,10 @@ function figure(s,showMarks){
   else o+='<circle cx="'+(hx-7)+'" cy="'+(hy+2)+'" r="2.6" fill="#1a1a1a"/><circle cx="'+(hx+7)+'" cy="'+(hy+2)+'" r="2.6" fill="#1a1a1a"/><path d="M'+(hx-5)+','+(hy+11)+' q5,4 10,0" stroke="#1a1a1a" stroke-width="2" fill="none"/>';
   // key-point marks (Learn only)
   if(showMarks){
-    if(s.id==='zenkutsu'||s.id==='fudo'){ var k=s.legs[1][1]; o+='<path d="M'+k[0]+','+(k[1]-16)+' V270" stroke="#2e7d32" stroke-width="2.5" stroke-dasharray="5 4"/><text x="'+(k[0]-6)+'" y="'+(k[1]-20)+'" font-size="11" fill="#2e7d32" text-anchor="end" font-weight="bold">knee over toes</text>'; }
+    if(s.id==='junzuki'){ var k=s.legs[1][1]; o+='<path d="M'+k[0]+','+(k[1]-16)+' V270" stroke="#2e7d32" stroke-width="2.5" stroke-dasharray="5 4"/><text x="'+(k[0]-6)+'" y="'+(k[1]-20)+'" font-size="11" fill="#2e7d32" text-anchor="end" font-weight="bold">knee over toes</text>'; }
     if(s.id==='neko'){ o+='<text x="168" y="250" font-size="11" fill="#2e7d32" font-weight="bold">heel up</text>'; }
     if(s.id==='kiba'||s.id==='shiko'){ o+='<path d="M20,'+(h[1]+4)+' H220" stroke="#2e7d32" stroke-width="2" stroke-dasharray="5 4"/><text x="120" y="'+(h[1]+60)+'" font-size="11" fill="#2e7d32" text-anchor="middle" font-weight="bold">hips low · knees out</text>'; }
-    if(s.id==='sanchin'){ o+='<text x="120" y="250" font-size="11" fill="#2e7d32" text-anchor="middle" font-weight="bold">knees in</text>'; }
+    if(s.id==='shiko'){ o+='<text x="120" y="290" font-size="11" fill="#2e7d32" text-anchor="middle" font-weight="bold">heels flat</text>'; }
   }
   // footprint panel (top view, forwards = up)
   o+='<g transform="translate(0,300)"><rect x="4" y="4" width="232" height="108" rx="12" fill="#e3f2fd" stroke="#1a1a1a" stroke-width="3"/><path d="M120,12 V104" stroke="#90a4ae" stroke-dasharray="4 4"/><text x="226" y="22" font-size="10" text-anchor="end" fill="#455a64">▲ front</text>';
@@ -137,7 +141,7 @@ function figure(s,showMarks){
 var KEY='dojoDashStances.v1', SV={best:0,bestStreak:0,badges:[],learned:[]};
 try{var x=JSON.parse(localStorage.getItem(KEY)||'null'); if(x) SV=Object.assign(SV,x);}catch(e){}
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(SV));}catch(e){}}
-var BADGES=[{id:'learn',t:'📖 Scholar',why:'View all 9 stances'},{id:'s5',t:'🔥 Streak 5'},{id:'s10',t:'⚡ Streak 10'},{id:'s20',t:'🐉 Streak 20'},{id:'p15',t:'🥋 Score 15'},{id:'p30',t:'🏆 Score 30'}];
+var BADGES=[{id:'learn',t:'📖 Scholar',why:'View all 8 stances'},{id:'s5',t:'🔥 Streak 5'},{id:'s10',t:'⚡ Streak 10'},{id:'s20',t:'🐉 Streak 20'},{id:'p15',t:'🥋 Score 15'},{id:'p30',t:'🏆 Score 30'}];
 function award(id){ if(SV.badges.indexOf(id)<0){SV.badges.push(id);persist();return true;} return false; }
 function badgeHTML(){ return BADGES.map(function(b){return '<span class="bdg'+(SV.badges.indexOf(b.id)>=0?' on':'')+'">'+b.t+'</span>'}).join(''); }
 var $=function(i){return document.getElementById(i)};
@@ -145,7 +149,7 @@ function show(id){['home','learn','spot','over'].forEach(function(s){$(s).classL
 function home(){ $('bestLine').textContent='Best score '+SV.best+' · best streak '+SV.bestStreak; $('badges').innerHTML=badgeHTML(); show('home'); }
 // Learn
 var li=0;
-function renderLearn(){ var s=S[li]; $('lPos').textContent=(li+1)+' / '+S.length; $('lName').textContent=s.name; $('lEn').textContent=s.en; $('lFig').innerHTML=figure(s,true);
+function renderLearn(){ var s=S[li]; $('lPos').textContent=(li+1)+' / '+S.length; $('lName').textContent=s.name; $('lEn').innerHTML=(s.jp&&s.jp!==s.en?s.jp+' · ':'')+s.en+(s.beginner?' · <span style="background:#eee;border:2px solid #000;border-radius:6px;padding:0 4px">beginner · white belt</span>':'')+(s.pend?'<br><span style="color:#b26a00;font-size:13px">⚠ '+s.pend+' — not final</span>':''); $('lFig').innerHTML=figure(s,true);
   $('lSplit').innerHTML='<div style="width:'+s.w[0]+'%">'+s.w[0]+'%</div><div style="width:'+s.w[1]+'%">'+s.w[1]+'%</div>';
   $('lPts').innerHTML=s.pts.map(function(p){return '<li>'+p+'</li>'}).join('');
   if(SV.learned.indexOf(s.id)<0){SV.learned.push(s.id);persist();} if(SV.learned.length>=S.length) award('learn'); }

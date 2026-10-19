@@ -3,7 +3,7 @@
 <meta name="robots" content="noindex,nofollow"><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Dojo Dash – Learn Numbers (Japanese counting) – PREVIEW</title>
-<!-- PREVIEW PROTOTYPE – not published. Forza Karate Club. Local saving only (localStorage), no accounts, no online features. -->
+<!-- Romaji: syllabus style (no hyphens/macrons); 11+ style pending Anthoni. PREVIEW PROTOTYPE – not published. Forza Karate Club. Local saving only (localStorage), no accounts, no online features. -->
 <style>
 :root{--red:#b71c1c;--cream:#fff8e1;--ink:#1a1a1a;--gold:#ffd600}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -74,28 +74,30 @@ var JP = (function(){
   // units-digit alternatives accepted as correct
   var ALT = {4:['shi','yon'],7:['shichi','nana'],9:['ku','kyu']};
   var UNIT_MAIN = {1:'ichi',2:'ni',3:'san',4:'shi',5:'go',6:'roku',7:'shichi',8:'hachi',9:'ku'};
-  var HUND = {1:'hyaku',2:'ni-hyaku',3:'san-byaku',4:'yon-hyaku',5:'go-hyaku',6:'roppyaku',7:'nana-hyaku',8:'happyaku',9:'kyu-hyaku'};
-  var THOU = {1:'sen',2:'ni-sen',3:'san-zen',4:'yon-sen',5:'go-sen',6:'roku-sen',7:'nana-sen',8:'hassen',9:'kyu-sen'};
+  var HUND = {1:'hyaku',2:'nihyaku',3:'sanbyaku',4:'yonhyaku',5:'gohyaku',6:'roppyaku',7:'nanahyaku',8:'happyaku',9:'kyuhyaku'};
+  var THOU = {1:'sen',2:'nisen',3:'sanzen',4:'yonsen',5:'gosen',6:'rokusen',7:'nanasen',8:'hassen',9:'kyusen'};
   function parts(n){ // returns array of prefix words + units digit
     var p=[], t=Math.floor(n/1000), h=Math.floor(n%1000/100), te=Math.floor(n%100/10), u=n%10;
     if(t) p.push(THOU[t]); if(h) p.push(HUND[h]);
-    if(te) p.push(te===1?'ju':D[te]+'-ju');
+    if(te) p.push(te===1?'ju':D[te]+'ju');
     return {p:p,u:u};
   }
   function forms(n){ // all accepted romaji spellings; first = main form shown
-    var r=parts(n), base=r.p.join('-');
+    var r=parts(n), base=r.p.join('');
     if(!r.u) return [base];
     var alts = ALT[r.u] ? (r.p.length? [ALT[r.u][1],ALT[r.u][0]] : ALT[r.u]) : [UNIT_MAIN[r.u]];
-    return alts.map(function(a){return base? base+'-'+a : a;});
+    return alts.map(function(a){return base+a;});
   }
-  function word(n){ var f=forms(n); return n<=10 && ALT[n] ? ALT[n].join(' / ') : f[0]; }
+  function word(n){ return forms(n)[0]; } // syllabus form first (shi, shichi, ku for 1-10)
+  function norm(t){ return String(t).toLowerCase().replace(/[\s\-]/g,'').replace(/uu/g,'u').replace(/ū/g,'u'); }
+  function accepts(n,t){ var x=norm(t); return forms(n).some(function(f){return norm(f)===x;}); } // hyphens/spaces/macrons OK
   function kanji(n){
     var t=Math.floor(n/1000), h=Math.floor(n%1000/100), te=Math.floor(n%100/10), u=n%10, s='';
     if(t) s+=(t>1?K[t]:'')+'千'; if(h) s+=(h>1?K[h]:'')+'百'; if(te) s+=(te>1?K[te]:'')+'十'; if(u) s+=K[u];
     return s;
   }
   function speak(n){ return kanji(n); } // ja-JP voices read kanji/numerals correctly
-  return {forms:forms, word:word, kanji:kanji, speak:speak};
+  return {forms:forms, word:word, accepts:accepts, kanji:kanji, speak:speak};
 })();
 if (typeof module !== 'undefined') module.exports = JP;
 </script>
