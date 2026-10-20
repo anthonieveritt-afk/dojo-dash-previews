@@ -2914,18 +2914,21 @@ function startKumite(lvl,practice){lvl=Math.max(KUMITE_FROM,Math.min(GRADES.leng
 function kmSay(text,t=70){KM.say={text,t}}
 // v16: referee voice (Japanese voice if the device has one, otherwise a two-tone call) and a WebAudio kiai shout
 function refCall(text){beep(660,.1,'triangle');setTimeout(()=>beep(880,.14,'triangle'),110);try{if(!window.speechSynthesis)return;const u=new SpeechSynthesisUtterance(text.replace(/!/g,''));if(jaVoice){u.voice=jaVoice;u.lang=jaVoice.lang}else u.lang='ja-JP';u.rate=1;u.pitch=.8;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
-function kiaiSnd(hi){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const t=ac.currentTime,d=.5,o=ac.createOscillator(),o2=ac.createOscillator(),gn=ac.createGain(),bp=ac.createBiquadFilter();
- o.type='sawtooth';o2.type='square';const f0=hi?330:250;o.frequency.setValueAtTime(f0*.8,t);o.frequency.linearRampToValueAtTime(f0*1.25,t+.08);o.frequency.exponentialRampToValueAtTime(f0*.7,t+d);o2.frequency.setValueAtTime(f0*1.5,t);o2.frequency.exponentialRampToValueAtTime(f0,t+d);
- bp.type='bandpass';bp.frequency.value=1100;bp.Q.value=1.4;gn.gain.setValueAtTime(0,t);gn.gain.linearRampToValueAtTime(.16,t+.03);gn.gain.setValueAtTime(.14,t+.25);gn.gain.exponentialRampToValueAtTime(.001,t+d);
- const nb=ac.createBuffer(1,ac.sampleRate*d,ac.sampleRate),ch=nb.getChannelData(0);for(let i=0;i<ch.length;i++)ch[i]=(Math.random()*2-1)*Math.exp(-i/ch.length*4)*.5;const ns=ac.createBufferSource();ns.buffer=nb;
- o.connect(bp);o2.connect(bp);ns.connect(bp);bp.connect(gn);gn.connect(ac.destination);o.start(t);o2.start(t);ns.start(t);o.stop(t+d);o2.stop(t+d)}catch(e){}}
+// v16: voiced kiai – speech synthesis shout (fast, low pitch; AO and AKA differ), WebAudio formant shout fallback
+let KIAI_LOG=[];function kiaiVoice(side,word){KIAI_LOG.push({side,word,t:Date.now()});let spoke=false;try{if(window.speechSynthesis&&speechSynthesis.getVoices().length){const vs=speechSynthesis.getVoices(),en=vs.filter(v=>/^en/i.test(v.lang)),u=new SpeechSynthesisUtterance(word==='Ear'?'Yah!':'Eeee!');u.voice=(en.length?en:vs)[side%Math.max(1,(en.length?en:vs).length)];u.rate=side?1.8:1.6;u.pitch=side?.55:.35;u.volume=1;speechSynthesis.cancel();speechSynthesis.speak(u);spoke=true}}catch(e){}if(!spoke)kiaiSnd(side,word)}
+function kiaiSnd(side,word){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const t=ac.currentTime,d=word==='Ear'?.42:.5,f0=side?235:195,out=ac.createGain();out.gain.setValueAtTime(0,t);out.gain.linearRampToValueAtTime(.22,t+.025);out.gain.setValueAtTime(.2,t+d*.55);out.gain.exponentialRampToValueAtTime(.001,t+d);out.connect(ac.destination);
+ const src=ac.createOscillator();src.type='sawtooth';src.frequency.setValueAtTime(f0*1.15,t);src.frequency.linearRampToValueAtTime(f0*1.3,t+.06);src.frequency.exponentialRampToValueAtTime(f0*.72,t+d); // falling shout pitch
+ const nb=ac.createBuffer(1,ac.sampleRate*d,ac.sampleRate),ch=nb.getChannelData(0);for(let i=0;i<ch.length;i++)ch[i]=(Math.random()*2-1)*.35;const ns=ac.createBufferSource();ns.buffer=nb;const ng=ac.createGain();ng.gain.value=.5;ns.connect(ng);
+ // vowel formants: "ee" (F1 300, F2 2300) vs "ear/yah" gliding ee -> ah (F1 750, F2 1200)
+ const F=[[300,750],[2300,1200],[3000,2600]];F.forEach(([a,b2],i)=>{const bp=ac.createBiquadFilter();bp.type='bandpass';bp.Q.value=i?8:5;bp.frequency.setValueAtTime(a*(side?1.06:1),t);if(word==='Ear')bp.frequency.linearRampToValueAtTime(b2*(side?1.06:1),t+.14);const gg=ac.createGain();gg.gain.value=i?.5:1;src.connect(bp);ng.connect(bp);bp.connect(gg);gg.connect(out)});
+ src.start(t);ns.start(t);src.stop(t+d);ns.stop(t+d)}catch(e){}}
 const KM_CER=['stand','rei1','turn','rei2','yoi'];
 function kmSkipCeremony(){const K_=KM;if(!K_||!KM_CER.includes(K_.ph))return false;kmReset();K_.ph='hajime';K_.t=0;kmSay('Shobu hajime!',60);refCall('Shobu hajime');for(const k in KMH)KMH[k]=0;K_.buf=0;return true}
 function kmReset(){const K_=KM;for(const f of [K_.ao,K_.aka]){f.x=f.side?5:3;f.act='idle';f.t=0;f.mv=null;f.cd=10;f.sweepWin=0;f.blockT=0}K_.ref.x=4}
 const KMR={punch:[.95,1.25],bkick:[1.15,1.55],hkick:[1.05,1.25],sweep:[.9,1.4]}; // v14: ranges where the fist/instep can land
 function kmAttack(f,mv){if(KM.ph!=='fight'||['punch','bkick','hkick','sweep','gpunch','hit','down'].includes(f.act)||f.cd>0){if(!f.side&&KM.ph==='fight'){KM.buf=12}return false}KM.buf=0;f.act=mv;f.mv=MOVES[mv];f.t=0;f.hitDone=0;{const o=f.side?KM.ao:KM.aka,ad=Math.abs(o.x-f.x),r=KMR[mv];f.lunge=r&&ad>r[1]&&ad<r[1]+.5?(ad-(r[0]+r[1])/2)/f.mv.s:0} /* step in (yori-ashi) during the set-up so techniques start from a realistic distance */if(mv==='punch'){f.gyaku=!f.gyaku}beep(mv==='punch'?520:mv==='sweep'?300:420,.05);return true}
 function kmPlayerAttack(){const o=KM.aka,f=KM.ao;if(o.act==='down'&&f.sweepWin>0)return kmAttack(f,'gpunch');kmAttack(f,KMH.u?'hkick':KMH.d?'sweep':KMH.r?'bkick':'punch')}
-function kmScore(f,pts,how){const K_=KM;K_.flash={x:MX0+f.x*PXM+f.face*72,y:FY-(pts>=3?150:pts==2?105:125),t:0,pts};f.score+=pts;if(K_.senshu===null)K_.senshu=f.side;K_.ph='yame';K_.t=0;f.slide={from:f.x,to:Math.max(.4,Math.min(7.6,f.x-f.face*1.1)),t:0};K_.kiai={side:f.side,t:0};setTimeout(()=>kiaiSnd(f.side),60);setTimeout(()=>refCall('Yame'),700);K_.ref.arm={side:f.side,pts};
+function kmScore(f,pts,how){const K_=KM;K_.flash={x:MX0+f.x*PXM+f.face*72,y:FY-(pts>=3?150:pts==2?105:125),t:0,pts};f.score+=pts;if(K_.senshu===null)K_.senshu=f.side;K_.ph='yame';K_.t=0;f.slide={from:f.x,to:Math.max(.4,Math.min(7.6,f.x-f.face*1.1)),t:0};K_.kiai={side:f.side,t:0};K_.kiai.word=Math.random()<.5?'Eiii':'Ear';setTimeout(()=>kiaiVoice(f.side,K_.kiai.word),60);setTimeout(()=>refCall('Yame'),700);K_.ref.arm={side:f.side,pts};
  kmSay('Yame! '+(f.side?'AKA':'AO')+' – '+how+' · '+PTSNM[pts]+' ('+pts+')',90);beep(f.side?220:880,.15);
  if(!f.side&&pts===3)ST.kmIppon=1}
 function kmJogai(f){const K_=KM;f.pens++;K_.ph='yame';K_.t=0;K_.ref.arm={side:f.side,pen:1};refCall('Yame');kmSay('Yame! Jogai – '+(f.side?'AKA':'AO')+' '+PEN[Math.min(5,f.pens)],90);beep(180,.2,'sawtooth');f.x=Math.max(.2,Math.min(7.8,f.x))}
@@ -3026,7 +3029,7 @@ function rigPose(f){const K_=KM,ph=f.bph,neutral=K_.ph!=='fight';const A=neutral
  if(neutral){P.lh=[S[0]+40,S[1]+10];P.rh=[S[0]+21,S[1]+12]} // v14: ready/kamae guard at chin height, clear of the belt
  const CER=K_.ph,yame=CER==='yame',ready=CER==='stand'||CER==='rei1'||CER==='turn'||CER==='rei2'||CER==='yoi'||(yame&&K_.t>40)||(CER==='end'&&K_.t<=150)||(CER==='hajime'&&K_.t<14);
  if(ready){const cs=CER==='stand'||CER==='rei1'||(CER==='turn'&&K_.t<15),tw=CER==='turn'?1-K_.t/30:cs?1:0,fd=CER==='yoi'||(yame&&K_.t>40)||CER==='end'||CER==='hajime'; // v16: upright musubi dachi facing the referee, then fudo dachi (yoi)
-  P.b=0;P.A=0;P.hip=[0,-RIG.hipH+(fd?6:2)];P.lean=.02;P.head=[0,0];P.ff=fd?[19,-6]:[7,-6];P.bf=fd?[-19,-6]:[-7,-6];P.ffA=P.bfA=.1;P.turn=Math.max(0,Math.min(1,tw));S=sh();
+  P.b=0;P.A=0;P.hip=[0,-RIG.hipH-(fd?5:6)];P.lean=.02;P.head=[0,0];P.ff=fd?[15,-6]:[7,-6];P.bf=fd?[-15,-6]:[-7,-6];P.ffA=P.bfA=.1;P.turn=Math.max(0,Math.min(1,tw));S=sh();
   if(fd){P.lh=[P.hip[0]+18,P.hip[1]+4];P.rh=[P.hip[0]+12,P.hip[1]+6]}else{P.lh=[P.hip[0]+4,P.hip[1]+40];P.rh=[P.hip[0]-2,P.hip[1]+42]} // yoi: fists in front of the belt; attention: open hands at the sides
   if(CER==='rei1'){const k=Math.sin(Math.min(1,K_.t/60)*Math.PI);P.head=[4*k,12*k];P.hip[1]+=3*k;P.lean=.02+.34*k}
   if(CER==='rei2'){const k=Math.sin(Math.min(1,K_.t/60)*Math.PI);P.lean=.04+.58*k;P.lh=[P.hip[0]+4,P.hip[1]+40];P.rh=[P.hip[0]-2,P.hip[1]+42]}
@@ -3076,11 +3079,11 @@ function kmFighterDraw(f){const K_=KM;studioSync();if(!f.var){const r=(f.side?K_
  const [kb,bf]=ikH(hipB,P.bf,RIG.thigh,RIG.shin,P.kbH),[kf,ff]=ikH(hipF,P.ff,RIG.thigh,RIG.shin,P.kfH);
  const shinAng=(k,a)=>Math.atan2(a[1]-k[1],a[0]-k[0])-Math.PI/2; // instep in line with the shin (toes lead along the kick)
  const ffA=P.ffA==null?shinAng(kf,ff)+.15:P.ffA;
- const shF=[S[0]+4+20*TN,S[1]+3+5*TN],shB=[S[0]-3-18*TN,S[1]+1-3*TN]; // both shoulders visible when front-on
- const [eb,rh]=ikE(shB,P.rh,RIG.uarm,RIG.farm,P.ebH),[ef,lh]=ikE(shF,P.lh,RIG.uarm,RIG.farm,P.efH);
+ const shF=[S[0]+3+18*TN,S[1]+4+5*TN],shB=[S[0]+5-20*TN,S[1]+4-3*TN]; // v16: rear shoulder sits on the torso, not behind it // both shoulders visible when front-on
+ const [eb,rh]=ikE(shB,P.rh,RIG.uarm,RIG.farm,P.ebH||[shB[0]+12,shB[1]+30]) /* v16: rear elbow tucked down-and-forward so the sleeve sits on the body, not behind it */,[ef,lh]=ikE(shF,P.lh,RIG.uarm,RIG.farm,P.efH);
  const LN2='#5c6678',PT=(a,b,t)=>[LRP(a[0],b[0],t),LRP(a[1],b[1],t)],GIK='#cdd5e2';
  const MITT=(h,e)=>{const d=Math.atan2(h[1]-e[1],h[0]-e[0]);g.save();g.translate(h[0],h[1]);g.rotate(d);g.fillStyle=INK;g.beginPath();g.ellipse(2,0,12,10.5,0,0,7);g.fill();g.fillStyle=col;g.beginPath();g.ellipse(2,0,10,8.5,0,0,7);g.fill();g.fillStyle='#0003';g.beginPath();g.ellipse(2,3.5,9,4.5,0,0,Math.PI);g.fill();g.fillStyle='#fff5';g.beginPath();g.ellipse(4,-4,4,2,0,0,7);g.fill();g.fillStyle=col;g.strokeStyle=INK;g.lineWidth=2;g.beginPath();g.rect(-12,-6,6,12);g.fill();g.stroke();g.restore()}; // WKF fist mitt with cuff
- const ARM=(sh,e,h,c)=>{rigLimb(sh,e,18,19,c,LN2);const w=PT(e,h,.55);rigLimb(w,h,9,8,skin);rigLimb(e,w,19,24,c,LN2);
+ const ARM=(sh,e,h,c,n)=>{const k=n?.78:1;rigLimb(sh,e,18*k,19*k,c,LN2);const w=PT(e,h,.55);rigLimb(w,h,9,8,skin);rigLimb(e,w,19*k,24*k,c,LN2);
    g.strokeStyle=LN2;g.lineWidth=1.2;const m=PT(sh,e,.5);g.beginPath();g.moveTo(m[0]-3,m[1]-4);g.lineTo(m[0]+3,m[1]+4);g.stroke();MITT(h,e)}; // big sleeve ending on the forearm
  const LEG=(hp,k,a,ang,c,fl)=>{rigLimb(hp,k,24,22,c,LN2);const hem=PT(k,a,.4);
    const pt=PT(hem,a,-.05);rigLimbRaw(pt,a,15.5,14,INK);rigLimbRaw(pt,a,12,10.5,col);g.strokeStyle='#0005';g.lineWidth=1.2;for(const t of [.35,.7]){const q=PT(pt,a,t);const dx=a[0]-pt[0],dy=a[1]-pt[1],L=Math.hypot(dx,dy)||1;g.beginPath();g.moveTo(q[0]-dy/L*6,q[1]+dx/L*6);g.lineTo(q[0]+dy/L*6,q[1]-dx/L*6);g.stroke()} // shin pad
@@ -3088,12 +3091,12 @@ function kmFighterDraw(f){const K_=KM;studioSync();if(!f.var){const r=(f.side?K_
    rigLimb(k,hem,22,26,c,LN2); // wide trouser leg flaring to the hem
    g.strokeStyle=LN2;g.lineWidth=1.2;const m=PT(hp,k,.55),m2=PT(k,hem,.55);g.beginPath();g.moveTo(m[0]-6,m[1]);g.quadraticCurveTo(m[0],m[1]+3,m[0]+6,m[1]-2);g.moveTo(m2[0]-6,m2[1]-2);g.quadraticCurveTo(m2[0],m2[1]+2,m2[0]+6,m2[1]-3);g.stroke()}; // trouser folds
  // far side first
- ARM(shB,eb,rh,GIS);LEG(hipB,kb,bf,P.bfA,GIS,P.bfFlip);
+ ARM(shB,eb,rh,GIS,1);LEG(hipB,kb,bf,P.bfA,GIS,P.bfFlip);
  // jacket: broad shoulders, slim waist, skirt hanging below the belt
  const nx=Math.cos(P.lean),ny=Math.sin(P.lean);
- const JW=1+.95*TN;g.beginPath();g.moveTo(S[0]-15*JW*nx,S[1]-15*ny);g.lineTo(S[0]+19*JW*nx,S[1]+19*ny);g.lineTo(hip[0]+14+12*TN,hip[1]-3-8*TN);g.lineTo(hip[0]+22+12*TN,hip[1]+30-10*TN);g.lineTo(hip[0]-21-12*TN,hip[1]+30+2*TN);g.lineTo(hip[0]-14-12*TN,hip[1]-3+2*TN);g.closePath();g.fillStyle=GI;g.fill();g.strokeStyle=INK;g.lineWidth=2.6;g.lineJoin='round';g.stroke();
- g.fillStyle=GIK;g.beginPath();g.moveTo(S[0]-15*nx,S[1]-15*ny);g.lineTo(hip[0]-14,hip[1]-3);g.lineTo(hip[0]-21,hip[1]+30);g.lineTo(hip[0]-9,hip[1]+30);g.lineTo(hip[0]-5,hip[1]);g.lineTo(S[0]-8*nx,S[1]-8*ny);g.closePath();g.fill(); // cel shadow on the back half
- g.strokeStyle=LN2;g.lineWidth=1.2;g.beginPath();g.moveTo(hip[0]+4,hip[1]+4);g.lineTo(hip[0]+7,hip[1]+30);g.moveTo(hip[0]-12,hip[1]+12);g.lineTo(hip[0]-14,hip[1]+29);g.stroke(); // skirt overlap + fold
+ const JW=1+.95*TN;g.beginPath();g.moveTo(S[0]-9*JW*nx,S[1]-9*ny+4);g.quadraticCurveTo(S[0]-12*JW*nx,S[1]+8,hip[0]-11-10*TN,hip[1]-3+2*TN);g.lineTo(hip[0]-14-10*TN,hip[1]+26+2*TN);g.lineTo(hip[0]+17+10*TN,hip[1]+26-10*TN);g.lineTo(hip[0]+13+10*TN,hip[1]-3-8*TN);g.lineTo(S[0]+15*JW*nx,S[1]+15*ny);g.quadraticCurveTo(S[0]+2,S[1]-6,S[0]-9*JW*nx,S[1]-9*ny+4);g.closePath();g.fillStyle=GI;g.fill();g.strokeStyle=INK;g.lineWidth=2.6;g.lineJoin='round';g.stroke();
+ g.fillStyle=GIK;g.beginPath();g.moveTo(S[0]-7*nx,S[1]-7*ny+5);g.lineTo(hip[0]-10,hip[1]-3);g.lineTo(hip[0]-13,hip[1]+25);g.lineTo(hip[0]-7,hip[1]+25);g.lineTo(hip[0]-4,hip[1]);g.lineTo(S[0]-3*nx,S[1]-3*ny+5);g.closePath();g.fill(); // cel shadow on the back half
+ g.strokeStyle=LN2;g.lineWidth=1.2;g.beginPath();g.moveTo(hip[0]+4,hip[1]+4);g.lineTo(hip[0]+7,hip[1]+30);g.moveTo(hip[0]-9,hip[1]+12);g.lineTo(hip[0]-11,hip[1]+25);g.stroke(); // skirt overlap + fold
  g.fillStyle=skin;g.beginPath();g.moveTo(S[0]+1,S[1]-1);g.lineTo(S[0]+10*nx+3,S[1]+10*ny);g.lineTo(S[0]+6+Math.sin(P.lean)*18,S[1]+18);g.closePath();g.fill();
  g.globalAlpha=1-TN;g.lineCap='butt';g.strokeStyle=INK;g.lineWidth=9;g.beginPath();g.moveTo(S[0]-1,S[1]-1);g.lineTo(hip[0]+12,hip[1]-4);g.stroke();g.strokeStyle='#ffffff';g.lineWidth=6.5;g.stroke(); // wide lapel
  if(TN>0){g.globalAlpha=TN;g.lineCap='butt';const cx0=(S[0]+hip[0])/2+2;for(const sx of [-1,1]){g.beginPath();g.moveTo(S[0]+sx*16,S[1]);g.lineTo(cx0,hip[1]-6);g.strokeStyle=INK;g.lineWidth=9;g.stroke();g.strokeStyle='#ffffff';g.lineWidth=6.5;g.stroke()}g.globalAlpha=1-TN} // v14b: front-on gi lapels crossing at the centre
@@ -3173,7 +3176,7 @@ function drawKumite(){const K_=KM,a=K_.ao,b=K_.aka;
  // legend
  rr(10,H-46,W-20,38,10,'rgba(0,0,0,.6)');txt('→ step in · ← step back · ↓ block · X/🥊 kizami/gyaku-zuki (1) · X+→ body kick (2) · X+↑ head kick (3) · X+↓ sweep, then X (3) · win: 8-pt lead or most at time',W/2,H-21,13,'#fff');
  if(K_.say){txt(K_.say.text,W/2,236,K_.say.text.length>26?26:36,'#ffd600');const rx=MX0+K_.ref.x*PXM;bubble(K_.say.text.split(' – ')[0].split(' · ')[0],rx,FY-158)} // v16: referee speech bubble
- if(K_.kiai&&K_.kiai.t<70){const f=K_.kiai.side?b:a,k=K_.kiai.t/70;g.globalAlpha=1-k*k;txt('Eiii!',MX0+f.x*PXM+f.face*70,FY-170-k*14,30+8*Math.sin(Math.min(1,K_.kiai.t/8)*Math.PI/2),'#fff59d','center','#bf360c');g.globalAlpha=1}
+ if(K_.kiai&&K_.kiai.t<70){const f=K_.kiai.side?b:a,k=K_.kiai.t/70;g.globalAlpha=1-k*k;if(K_.kiai.t<26){const cx=MX0+f.x*PXM+f.face*24,cy=FY-188,R0=10+K_.kiai.t*1.6;g.strokeStyle='#fff59d';g.lineWidth=3;g.lineCap='round';for(let i=0;i<7;i++){const an=-Math.PI/2+(i-3)*.32*f.face;g.beginPath();g.moveTo(cx+Math.cos(an)*R0*f.face,cy+Math.sin(an)*R0);g.lineTo(cx+Math.cos(an)*(R0+12)*f.face,cy+Math.sin(an)*(R0+12));g.stroke()}}g.globalAlpha=1}
  if(K_.fb)txt(K_.fb.text,MX0+K_.fb.x*PXM,FY-200,18,'#fff');
  if(K_.ph==='result'){g.fillStyle='rgba(0,0,0,.7)';g.fillRect(0,0,W,H);const won=K_.winner===0;
   txt(won?(K_.practice?'🏆 Ao no kachi!':'🎓 KUMITE GRADING PASSED!'):'Not this time…',W/2,170,42,won?'#ffd600':'#ff8a65');
@@ -3357,7 +3360,7 @@ const kmPad=document.getElementById('touchKM');document.querySelectorAll('#touch
 document.querySelectorAll('#touchFO .fb').forEach(b=>{const h=e=>{e.preventDefault();foInput(b.dataset.d)};b.addEventListener('touchstart',h,{passive:false});b.addEventListener('mousedown',h)});
 function loop(t){if(isTouch){const fo=state==='faceoff',km=state==='kumite';foPad.style.display=fo?'flex':'none';kmPad.style.display=km?'flex':'none';const ti=state==='title';touchEl.style.display=fo||km||TWO||ti?'none':'flex';t2El.style.display=!fo&&!km&&TWO&&!ti?'flex':'none'} /* v14 tidy: no game pads over the menu */trialEl.style.display=(state==='over'||state==='win'||state==='dailydone')&&nb.style.display!=='flex'?'block':'none';acc+=Math.min(100,t-last);last=t;while(acc>=1000/60){update();acc-=1000/60}draw();requestAnimationFrame(loop)}
 addEventListener('keydown',e=>{if(state==='kumite'&&KM&&KM_CER.includes(KM.ph)&&!/INPUT|TEXTAREA/.test(e.target.tagName)&&e.code!=='KeyM'&&e.code!=='Escape'){e.preventDefault();kmSkipCeremony()}},true);cv.addEventListener('pointerdown',()=>{if(state==='kumite'&&KM)kmSkipCeremony()}); // v16: tap or any key skips the ceremony
-window.__DD={get KM(){return KM},startKumite,kmScore,kmAttack,rigPose,kmGeo,kmZone,KUMITE_FROM,SPONSORS,setState:v=>{state=v}}; // v16 test hook (read-only helpers for headless tests)
+window.__DD={get KIAI(){return KIAI_LOG},get KM(){return KM},startGiScene:()=>startGiScene(),get GS(){return GS},startKumite,kmScore,kmAttack,rigPose,kmGeo,kmZone,KUMITE_FROM,SPONSORS,setState:v=>{state=v}}; // v16 test hook (read-only helpers for headless tests)
 requestAnimationFrame(loop);
 })();
 </script></body></html>
