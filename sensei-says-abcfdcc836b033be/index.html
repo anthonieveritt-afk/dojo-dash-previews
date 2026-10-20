@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Sensei Says – Dojo Dash idea (preview) – Forza Karate Club</title>
+<style>
+:root{--red:#dc2626;--redd:#b91c1c;--tint:#fee2e2;--ink:#111;--paper:#fafaf9;--line:#e7e5e4;--muted:#57534e;--faint:#a8a29e;--ok:#16a34a;--okt:#dcfce7}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--paper);color:var(--ink)}
+header{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid var(--line);background:#fff}
+header b{color:var(--red);font-size:15px}header span{font-size:12px;color:var(--muted)}
+main{max-width:720px;margin:0 auto;padding:20px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px}
+.hud{display:flex;gap:18px;font-size:13px;color:var(--muted);margin-bottom:14px;flex-wrap:wrap}.hud b{color:var(--ink)}
+.stage{display:flex;align-items:center;gap:18px;min-height:130px}
+.sensei{font-size:64px;line-height:1}
+.bubble{position:relative;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px 18px;min-width:220px}
+.bubble .jp{font-size:26px;font-weight:700;letter-spacing:.5px}.bubble .hint{font-size:12px;color:var(--faint);margin-top:4px;min-height:15px}
+.bar{height:6px;background:var(--line);border-radius:3px;margin:14px 0 18px;overflow:hidden}.bar i{display:block;height:100%;background:var(--red);width:100%}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.opt{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--paper);font-size:15px;cursor:pointer;text-align:left;color:var(--ink)}
+.opt:hover{border-color:var(--red)}.opt .k{font-size:12px;color:var(--muted);width:12px}.opt .e{font-size:24px}
+.opt.good{background:var(--okt);border-color:var(--ok)}.opt.bad{background:var(--tint);border-color:var(--red)}
+.msg{font-size:13px;margin-top:14px;min-height:18px}
+.menu{display:grid;gap:10px}.menu button,.btn{padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:14px;text-align:left;cursor:pointer}
+.menu button:hover{border-color:var(--red)}.menu small{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+.primary{background:var(--red);color:#fff;border-color:var(--red)}
+.note{font-size:11px;color:var(--faint);margin-top:18px;line-height:1.5}
+label{font-size:13px;color:var(--muted);display:flex;gap:8px;align-items:center;margin-top:10px}
+</style></head><body>
+<header><b>Forza Karate Club · Sensei Says</b><span>Dojo Dash idea · preview only</span></header>
+<main>
+<div id="menu" class="card">
+ <h2 style="margin:0 0 6px;font-size:20px">Sensei Says</h2>
+ <p style="margin:0 0 16px;font-size:14px;color:var(--muted)">Sensei calls a dojo command in Japanese. Pick what it means before the bar runs out. Learn the words you need for your grading.</p>
+ <div class="menu" id="levels"></div>
+ <label><input type="checkbox" id="listen"> Listen mode: hear the command instead of reading it (needs a Japanese voice on this device)</label>
+ <p class="note">Commands and meanings come from the Forza Karate Club grading syllabus (17th to 15th Kyu). Best scores are kept on this device only. No names, accounts or online features.</p>
+</div>
+<div id="game" class="card" style="display:none">
+ <div class="hud"><span>Level <b id="lvName"></b></span><span>Score <b id="sc">0</b></span><span>Streak <b id="stk">0</b></span><span>Lives <b id="lv">❤❤❤</b></span></div>
+ <div class="stage"><div class="sensei" aria-hidden="true">🥋</div><div class="bubble"><div class="jp" id="cmd">Rei!</div><div class="hint" id="hint"></div></div></div>
+ <div class="bar"><i id="bar"></i></div>
+ <div class="opts" id="opts"></div>
+ <div class="msg" id="msg"></div>
+</div>
+<div id="over" class="card" style="display:none">
+ <h2 style="margin:0 0 6px;font-size:20px" id="ovT">Yame!</h2>
+ <p style="margin:0 0 6px;font-size:14px" id="ovS"></p>
+ <p style="margin:0 0 16px;font-size:13px;color:var(--muted)" id="ovB"></p>
+ <button class="btn primary" id="again">Try again</button> <button class="btn" id="back">Levels</button>
+</div>
+</main>
+<script>
+(()=>{
+// Source: /home/box/shared/gradings/2026-11-02/syllabus-requirements.md (Club Operations): hajime/yame = begin/stop, rei = bow (17th Kyu);
+// kiai = spirit shout (16th Kyu); yoi/mawatte/naore = ready/turn/return to start (15th Kyu).
+const CMDS={
+ rei:{jp:'Rei!',en:'Bow',e:'🙇'},hajime:{jp:'Hajime!',en:'Begin',e:'▶️'},yame:{jp:'Yame!',en:'Stop',e:'✋'},
+ kiai:{jp:'Kiai!',en:'Spirit shout',e:'📣'},yoi:{jp:'Yoi!',en:'Ready',e:'✊'},mawatte:{jp:'Mawatte!',en:'Turn around',e:'🔄'},naore:{jp:'Naore!',en:'Return to start (return to ready)',e:'↩️'}};
+const LEVELS=[
+ {id:'w',name:'17th Kyu words',cmds:['rei','hajime','yame'],time:5000,goal:10},
+ {id:'y',name:'16th Kyu words',cmds:['rei','hajime','yame','kiai'],time:4500,goal:12},
+ {id:'r',name:'15th Kyu words',cmds:['rei','hajime','yame','kiai','yoi','mawatte','naore'],time:4000,goal:15}];
+const KEY='forzaSenseiSays';let SAVE={};try{SAVE=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(SAVE))}catch(e){}}
+const $=id=>document.getElementById(id);let ja=null;function fv(){try{ja=speechSynthesis.getVoices().find(v=>/^ja/i.test(v.lang))||null}catch(e){}}try{fv();speechSynthesis.onvoiceschanged=fv}catch(e){}
+function say(t){if(!ja)return;try{const u=new SpeechSynthesisUtterance(t.replace('!',''));u.voice=ja;u.lang=ja.lang;u.rate=.9;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+let ac=null;function beep(f,d,t){try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.type=t||'triangle';o.frequency.value=f;g.gain.value=.06;g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+d);o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d)}catch(e){}}
+function unlocked(i){return i===0||(SAVE['pass_'+LEVELS[i-1].id])}
+function menu(){$('menu').style.display='';$('game').style.display='none';$('over').style.display='none';const L=$('levels');L.innerHTML='';
+ LEVELS.forEach((l,i)=>{const b=document.createElement('button');const ok=unlocked(i);b.disabled=!ok;b.innerHTML=(ok?'':'🔒 ')+l.name+'<small>'+l.cmds.map(c=>CMDS[c].jp.replace('!','')).join(' · ')+' · best '+(SAVE['best_'+l.id]||0)+(SAVE['pass_'+l.id]?' · passed ✓':'')+'</small>';b.onclick=()=>start(i);L.appendChild(b)})}
+let G=null,raf=0;
+function start(i){const l=LEVELS[i];G={i,l,score:0,stk:0,lives:3,n:0,cur:null,t0:0,lock:false,time:l.time,listen:$('listen').checked&&!!ja};
+ $('menu').style.display='none';$('over').style.display='none';$('game').style.display='';$('lvName').textContent=l.name;upd();next()}
+function upd(){$('sc').textContent=G.score;$('stk').textContent=G.stk;$('lv').textContent='❤'.repeat(G.lives)+'♡'.repeat(3-G.lives)}
+function next(){const c=G.l.cmds;let k;do{k=c[Math.random()*c.length|0]}while(k===G.cur&&c.length>1);G.cur=k;G.lock=false;
+ const pool=c.filter(x=>x!==k).sort(()=>Math.random()-.5).slice(0,3);const opts=[k,...pool].sort(()=>Math.random()-.5);G.opts=opts;
+ $('cmd').textContent=G.listen?'🔊 Listen…':CMDS[k].jp;$('hint').textContent=G.listen?'Tap 🔊 again by pressing R':'';$('msg').textContent='';
+ const O=$('opts');O.innerHTML='';opts.forEach((o,i)=>{const b=document.createElement('button');b.className='opt';b.innerHTML='<span class="k">'+(i+1)+'</span><span class="e">'+CMDS[o].e+'</span><span>'+CMDS[o].en+'</span>';b.onclick=()=>pick(i);O.appendChild(b)});
+ say(CMDS[k].jp);G.time=Math.max(1800,G.l.time-G.n*120);G.t0=performance.now();cancelAnimationFrame(raf);tick()}
+function tick(){if(!G||G.lock)return;const f=1-(performance.now()-G.t0)/G.time;$('bar').style.width=Math.max(0,f*100)+'%';if(f<=0){miss(-1,'Too slow!');return}raf=requestAnimationFrame(tick)}
+function pick(i){if(!G||G.lock)return;const ok=G.opts[i]===G.cur;if(ok){G.lock=true;G.stk++;G.n++;G.score+=100+Math.min(10,G.stk)*10;beep(784,.12);$('opts').children[i].classList.add('good');$('msg').innerHTML='<span style="color:var(--ok)">Hai! '+CMDS[G.cur].jp.replace('!','')+' means '+CMDS[G.cur].en.toLowerCase()+'.</span>';upd();setTimeout(()=>{if(G.n>=G.l.goal)end(true);else next()},650)}else miss(i,'Not quite.')}
+function miss(i,why){G.lock=true;G.stk=0;G.lives--;beep(220,.25,'sawtooth');const C=$('opts').children;if(i>=0)C[i].classList.add('bad');C[G.opts.indexOf(G.cur)].classList.add('good');
+ $('msg').innerHTML='<span style="color:var(--redd)">'+why+' '+CMDS[G.cur].jp.replace('!','')+' means '+CMDS[G.cur].en.toLowerCase()+'.</span>';upd();setTimeout(()=>{if(G.lives<=0)end(false);else next()},1400)}
+function end(won){cancelAnimationFrame(raf);const l=G.l;SAVE['best_'+l.id]=Math.max(SAVE['best_'+l.id]||0,G.score);if(won)SAVE['pass_'+l.id]=1;save();
+ $('game').style.display='none';$('over').style.display='';$('ovT').textContent=won?'Otagai ni rei! Level passed 🙇':'Yame! Out of lives';
+ $('ovS').textContent='Score '+G.score+' · '+G.n+' of '+l.goal+' commands';$('ovB').textContent=won?(LEVELS[G.i+1]?'Next level unlocked: '+LEVELS[G.i+1].name+'.':'You know every command for 17th to 15th Kyu.'):'Best on this device: '+SAVE['best_'+l.id]+'.';G.done=1}
+$('again').onclick=()=>start(G.i);$('back').onclick=menu;
+addEventListener('keydown',e=>{if(!G||$('game').style.display==='none')return;const m=/^(Digit|Numpad)([1-4])$/.exec(e.code);if(m){pick(+m[2]-1);e.preventDefault()}if(e.code==='KeyR'&&G.listen)say(CMDS[G.cur].jp);if(e.code==='Escape'){cancelAnimationFrame(raf);G.lock=true;menu()}});
+menu();
+})();
+</script></body></html>
