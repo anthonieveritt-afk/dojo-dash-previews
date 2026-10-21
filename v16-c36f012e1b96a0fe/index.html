@@ -26,7 +26,7 @@ canvas{background:#87ceeb;max-width:100vw;max-height:100vh;aspect-ratio:16/9;wid
 </style></head><body>
 <div id="wrap"><canvas id="c" width="960" height="540"></canvas></div>
 <a id="trial" href="https://forza-karate-website.vercel.app/trial-class" target="_top">🥋 Book a £10 trial at Forza Karate Club →</a>
-<div id="touchKM"><div><div class="fb" data-k="l">◀</div><div class="fb" data-k="u">▲</div><div class="fb" data-k="d">▼</div><div class="fb" data-k="r">▶</div></div><div><div class="fb kick" data-k="a">🥊</div></div></div>
+<div id="touchKM"><div><div class="fb" data-k="r">◀</div><div class="fb" data-k="u">▲</div><div class="fb" data-k="d">▼</div><div class="fb" data-k="l">▶</div></div><div><div class="fb kick" data-k="a">🥊</div></div></div>
 <div id="touchFO"><div><div class="fb" data-d="left">◀</div><div class="fb" data-d="up">▲</div><div class="fb" data-d="down">▼</div><div class="fb" data-d="right">▶</div></div><div><div class="fb kick" data-d="kick">🥋</div></div></div>
 <div id="touch2"><div><div class="tb p2" data-p="1" data-k="left">◀</div><div class="tb p2" data-p="1" data-k="right">▶</div><div class="tb p2" data-p="1" data-k="kick">🥋</div><div class="tb p2" data-p="1" data-k="jump">▲</div></div><div><div class="tb" data-k="left">◀</div><div class="tb" data-k="right">▶</div><div class="tb" data-k="kick">🥋</div><div class="tb" data-k="jump">▲</div></div></div>
 <div id="touch"><div><div class="tb" data-k="left">◀</div><div class="tb" data-k="right">▶</div></div><div><div class="tb" data-k="kick">🥋</div><div class="tb" data-k="jump">▲</div></div></div>
@@ -2410,6 +2410,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=API;else G.ForzaTe
  // game move -> studio technique
  return {on:localStorage.getItem('dojoDash.studioTech')==='1',map:{kizami:by['Kizami zuki'],gyaku:by['Gyaku zuki'],hkick:by['Mawashi geri jodan'],bkick:by['Mawashi geri jodan'],sweep:by['Ashi barai']}}})();
 </script>
+<button id="muteBtn" type="button" aria-label="Sound on or off" style="position:fixed;right:10px;top:142px;z-index:20;font:600 12px system-ui;padding:4px 9px;border-radius:8px;border:2px solid #fff;background:#263238;color:#fff;cursor:pointer">🔊 Sound</button>
 <button id="studioBtn" style="position:fixed;right:10px;top:10px;z-index:20;display:none;font:600 13px system-ui;padding:6px 10px;border-radius:8px;border:2px solid #fff;background:#263238;color:#fff;cursor:pointer">Studio techniques: OFF (T)</button>
 <script>
 // Forza Karate site palette for menu / leaderboard chrome (matches the site: red #dc2626, ink #111111, paper #fafaf9)
@@ -2417,7 +2418,8 @@ const FZ={red:'#dc2626',redDark:'#b91c1c',redDeep:'#7f1d1d',redTint:'#fee2e2',in
 (()=>{
 const cv=document.getElementById('c'),g=cv.getContext('2d'),W=960,H=540,GROUND=470;
 // ---------- audio ----------
-let ac=null;function beep(f=440,d=.1,t='square',v=.08){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),gn=ac.createGain();o.type=t;o.frequency.value=f;gn.gain.value=v;gn.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+d);o.connect(gn);gn.connect(ac.destination);o.start();o.stop(ac.currentTime+d)}catch(e){}}
+let MUTED=(()=>{try{return localStorage.getItem('dojoDash.mute')==='1'}catch(e){return false}})();
+let ac=null;function beep(f=440,d=.1,t='square',v=.08){if(MUTED)return;try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),gn=ac.createGain();o.type=t;o.frequency.value=f;gn.gain.value=v;gn.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+d);o.connect(gn);gn.connect(ac.destination);o.start();o.stop(ac.currentTime+d)}catch(e){}}
 // ---------- input ----------
 const K={left:0,right:0,jump:0,kick:0,jp:0,kp:0},K2={left:0,right:0,jump:0,kick:0,jp:0,kp:0};let anyPressed=0;
 function clrK(){K.jp=K.kp=K2.jp=K2.kp=0}
@@ -2425,12 +2427,12 @@ const isTouch=('ontouchstart' in window||navigator.maxTouchPoints>0);
 const map={ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',ArrowUp:'jump',KeyW:'jump',Space:'jump',KeyX:'kick',KeyK:'kick',KeyL:'kick'};
 const mapA={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'jump',KeyL:'kick',KeyX:'kick'},mapB={KeyA:'left',KeyD:'right',KeyW:'jump',KeyF:'kick'};
 function keyOf(c){if(TWO&&state!=='title'){if(mapA[c])return[K,mapA[c]];if(mapB[c])return[K2,mapB[c]];return null}return map[c]?[K,map[c]]:null}
-addEventListener('keydown',e=>{if(document.getElementById('nameBox').style.display==='flex'||rmOpen())return;if(state==='stageclear'&&QZ&&!QZ.done&&QZ.ans==null){const d=/^(Digit|Numpad)([1-3])$/.exec(e.code);if(d){e.preventDefault();qzAnswer(+d[2]-1);return}if(e.code==='ArrowDown'||e.code==='ArrowUp'){e.preventDefault();QZ.sel=(QZ.sel+(e.code==='ArrowDown'?1:QZ.opts.length-1))%QZ.opts.length;return}if((e.code==='Enter'||e.code==='Space')&&!e.repeat&&QZ.t>20){e.preventDefault();qzAnswer(QZ.sel);return}return}if(state==='kumite'){const k=KMKEYS[e.code];if(k){e.preventDefault();if(!e.repeat)kmInput(k,1)}else if(e.code==='KeyM'||e.code==='Escape')kmQuit();return}if(state==='faceoff'){const d=FOKEYS[e.code];if(d){e.preventDefault();if(!e.repeat)foInput(d)}else if(e.code==='KeyM'||e.code==='Escape')foQuit();return}const m=keyOf(e.code);if(m){e.preventDefault();const[T,k]=m;if(!T[k]){if(k=='jump')T.jp=1;if(k=='kick')T.kp=1}T[k]=1}if(state==='title'&&(e.code==='KeyB'||(badgePanel&&e.code==='Escape'))){badgePanel=e.code==='KeyB'?!badgePanel:false;return}if(state==='title'&&badgePanel)return;if(state==='title'){if(/^Digit[1-6]$/.test(e.code)){sel=+e.code[5]-1;anyPressed=1;return}if(e.code==='ArrowDown'||e.code==='KeyS'){sel=(sel+1)%6;return}if(e.code==='ArrowUp'){sel=(sel+5)%6;return}}if(e.code==='Enter'||e.code==='Space')anyPressed=1;if(e.code==='KeyP'&&state==='play')paused=!paused});
+addEventListener('keydown',e=>{if(document.getElementById('nameBox').style.display==='flex'||rmOpen())return;if(state==='kumite'){const k=KMKEYS[e.code];if(k){e.preventDefault();if(!e.repeat)kmInput(k,1)}else if(e.code==='KeyM'||e.code==='Escape')kmQuit();return}if(state==='faceoff'){const d=FOKEYS[e.code];if(d){e.preventDefault();if(!e.repeat)foInput(d)}else if(e.code==='KeyM'||e.code==='Escape')foQuit();return}const m=keyOf(e.code);if(m){e.preventDefault();const[T,k]=m;if(!T[k]){if(k=='jump')T.jp=1;if(k=='kick')T.kp=1}T[k]=1}if(state==='title'&&(e.code==='KeyB'||(badgePanel&&e.code==='Escape'))){badgePanel=e.code==='KeyB'?!badgePanel:false;return}if(state==='title'&&badgePanel)return;if(state==='title'){if(/^Digit[1-6]$/.test(e.code)){sel=+e.code[5]-1;anyPressed=1;return}if(e.code==='ArrowDown'||e.code==='KeyS'){sel=(sel+1)%6;return}if(e.code==='ArrowUp'){sel=(sel+5)%6;return}}if(e.code==='Enter'||e.code==='Space')anyPressed=1;if(e.code==='KeyP'&&state==='play')paused=!paused});
 addEventListener('keyup',e=>{if(state==='kumite'){const k=KMKEYS[e.code];if(k&&k!=='a')kmInput(k,0)}const m=keyOf(e.code);if(m)m[0][m[1]]=0;if(TWO){const a=mapA[e.code],b=mapB[e.code];if(a)K[a]=0;if(b)K2[b]=0}const c=map[e.code];if(c)K[c]=0});
 const touchEl=document.getElementById('touch');
 if('ontouchstart' in window||navigator.maxTouchPoints>0)touchEl.style.display='flex';
 document.querySelectorAll('.tb').forEach(b=>{const k=b.dataset.k,T=b.dataset.p==='1'?K2:K;const on=e=>{e.preventDefault();if(!T[k]){if(k=='jump')T.jp=1;if(k=='kick')T.kp=1}T[k]=1;anyPressed=1;b.classList.add('on')};const off=e=>{e.preventDefault();T[k]=0;b.classList.remove('on')};b.addEventListener('touchstart',on,{passive:false});b.addEventListener('touchend',off,{passive:false});b.addEventListener('touchcancel',off);b.addEventListener('mousedown',on);b.addEventListener('mouseup',off);b.addEventListener('mouseleave',off)});
-cv.addEventListener('pointerdown',e=>{if(state==='stageclear'&&QZ&&!QZ.done&&QZ.ans==null){const r=cv.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*H;const i=QZ.box.findIndex(b=>x>b.x&&x<b.x+b.w&&y>b.y&&y<b.y+b.h);if(i>=0)qzAnswer(i);return}if(state==='title'){const r=cv.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*H;if(badgePanel){badgePanel=false;return}const BB=BADGE_BTN;if(x>BB.x&&x<BB.x+BB.w&&y>BB.y&&y<BB.y+BB.h){badgePanel=true;return}const i=MENU.findIndex(m=>x>m.x&&x<m.x+m.w&&y>m.y&&y<m.y+m.h);if(i>=0){sel=i;anyPressed=1}return}anyPressed=1});
+cv.addEventListener('pointerdown',e=>{if(state==='title'){const r=cv.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*H;if(badgePanel){badgePanel=false;return}const BB=BADGE_BTN;if(x>BB.x&&x<BB.x+BB.w&&y>BB.y&&y<BB.y+BB.h){badgePanel=true;return}const i=MENU.findIndex(m=>x>m.x&&x<m.x+m.w&&y>m.y&&y<m.y+m.h);if(i>=0){sel=i;anyPressed=1}return}anyPressed=1});
 // ---------- leaderboard ----------
 const LB='dojoDashLeaderboard';
 function lbKey(m){m=m||(TWO&&mode==='career'?'team':mode);return m==='team'?'dojoDashTeam':m==='daily'?'dojoDashDaily-'+TODAY:m==='mastery'?'dojoDashMastery':LB}
@@ -2655,7 +2657,6 @@ function update(){
  if(state==='giscene'){gsUpdate();clrK();anyPressed=0;return}
  if(state==='faceoff'){foUpdate();clrK();anyPressed=0;return}
  if(state==='intro'){msg.t--;if(msg.t<=0)state='play';anyPressed=0;clrK();return}
- if(state==='stageclear'&&QZ&&!QZ.done){qzUpdate();return}
  if(state==='stageclear'){msg.t--;if(anyPressed&&msg.t<200)msg.t=0;anyPressed=0;if(msg.t<=0){if(mode==='mastery')startMastery(mlvl);else if(stageIdx+1<LEVELS.length)startLevel(stageIdx+1);else{state='win';setTimeout(askName,800)}}return}
  if(paused)return;
  levelTime++;totalTime++;if(frame%120==0)checkBadges();
@@ -2786,52 +2787,8 @@ function foInput(d){const F=FO;if(!F)return;
   else{foFb('Miss! Wrong way','#ff5252');F.os++;F.queue=[];beep(150,.2,'sawtooth');foCheckEnd();if(F.ph!=='end')foGap(40)}}
  else{if(d==='kick'){const pts=perfect?2:1;F.ps+=pts;F.hitT=22;foFb(perfect?'PERFECT! Waza-ari +2':'Good! Yuko +1',perfect?'#ffd600':'#a5d6a7');beep(880,.1);setTimeout(()=>beep(1175,.12),80);foCheckEnd();if(F.ph!=='end')foGap(36)}
   else{foFb('Miss! That was your chance','#ff8a65');foGap(30)}}}
-// ---------- v15: Sensei's grading question (Forza syllabus terminology; source: Club Operations' grading syllabus requirements, Nov 2026 draft) ----------
-const QZB=[
- {k:'17th Kyu',t:'m',q:'What does hajime mean?',a:'Begin'},
- {k:'17th Kyu',t:'m',q:'What does yame mean?',a:'Stop'},
- {k:'17th Kyu',t:'m',q:'What does rei mean?',a:'Bow'},
- {k:'17th Kyu',t:'w',q:'What is a karate suit called?',a:'Gi'},
- {k:'17th Kyu',t:'w',q:'What is a karate belt called?',a:'Obi'},
- {k:'16th Kyu',t:'m',q:'What does kiai mean?',a:'Spirit shout'},
- {k:'16th Kyu',t:'n',q:'How do you say 3 in Japanese?',a:'San'},
- {k:'16th Kyu',t:'n',q:'How do you say 5 in Japanese?',a:'Go'},
- {k:'15th Kyu',t:'m',q:'What does yoi mean?',a:'Ready'},
- {k:'15th Kyu',t:'m',q:'What does mawatte mean?',a:'Turn around'},
- {k:'15th Kyu',t:'m',q:'What does naore mean?',a:'Return to start (return to ready)'},
- {k:'15th Kyu',t:'m',q:'What is kime?',a:'Focus'},
- {k:'14th Kyu',t:'m',q:'What is zanshin?',a:'Staying alert after a technique'},
- {k:'12th Kyu',t:'m',q:'What is tai sabaki?',a:'Body movement to evade'},
- {k:'11th Kyu',t:'m',q:'What does Pinan mean?',a:'Peaceful mind'},
- {k:'10th Kyu',t:'m',q:'What is maai?',a:'Distance'},
- {k:'8th Kyu',t:'m',q:'What is bunkai?',a:'Kata application'},
- {k:'6th Kyu',t:'m',q:'What is a tokui kata?',a:'Your chosen favourite kata'},
- {k:'4th Kyu',t:'m',q:'What is deai?',a:'Meeting the attack (timing)'}];
-const QZ_EXTRA={n:['Ichi','Ni','Shi'],w:['Kiai','Kime','Rei']};
-let QZ=null;const QZ_RT=150;
-function qzStart(gr){const G=GRADES[gr]||{};let pool=QZB.filter(q=>q.k&&q.k===G.k);
- if(!pool.length){const keys=GRADES.slice(1,gr+1).map(x=>x.k).filter(Boolean);pool=QZB.filter(q=>keys.includes(q.k));if(!pool.length)pool=QZB}
- const Q=pool[Math.random()*pool.length|0];const others=[...new Set(QZB.filter(o=>o.t===Q.t&&o.a!==Q.a).map(o=>o.a).concat((QZ_EXTRA[Q.t]||[]).filter(a=>a!==Q.a)))];
- const opts=[Q.a];while(opts.length<3&&others.length)opts.push(others.splice(Math.random()*others.length|0,1)[0]);
- for(let i=opts.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[opts[i],opts[j]]=[opts[j],opts[i]]}
- QZ={q:Q,k:G.k||'',opts,sel:0,ans:null,ok:false,rt:0,t:0,done:false,box:[]};beep(587,.1,'triangle')}
-function qzAnswer(i){if(!QZ||QZ.ans!=null||i<0||i>=QZ.opts.length)return;QZ.ans=i;QZ.ok=QZ.opts[i]===QZ.q.a;QZ.rt=QZ_RT;
- if(QZ.ok){score+=300;ST.terms=(ST.terms||0)+1;beep(784,.12,'triangle');setTimeout(()=>beep(1046,.18,'triangle'),120)}else{beep(220,.25,'sawtooth')}saveST()}
-function qzUpdate(){QZ.t++;if(QZ.ans!=null){QZ.rt--;if(QZ.rt<=0||(anyPressed&&QZ.rt<QZ_RT-30))QZ.done=true}anyPressed=0}
-function drawQuiz(){g.fillStyle='rgba(17,17,17,.6)';g.fillRect(0,0,W,H);const pw=560,ph=330,px=(W-pw)/2,py=(H-ph)/2-10;rr(px,py,pw,ph,16,FZ.white);
- tx("Sensei's grading question",px+32,py+40,13,FZ.red,'left',600);if(QZ.k)tx(QZ.k,px+pw-32,py+40,13,FZ.muted,'right',500);
- tx(fitX(QZ.q.q,pw-64,20,600),px+32,py+82,20,FZ.ink,'left',600);
- QZ.box=[];QZ.opts.forEach((o,i)=>{const bx=px+32,by=py+108+i*56,bw=pw-64,bh=44;QZ.box.push({x:bx,y:by,w:bw,h:bh});
-  const isA=QZ.ans!=null,right=o===QZ.q.a,picked=QZ.ans===i;
-  const fill=isA?(right?'#dcfce7':picked?FZ.redTint:FZ.paper):FZ.paper;rr(bx,by,bw,bh,10,fill);
-  g.strokeStyle=isA?(right?'#16a34a':picked?FZ.red:FZ.line):(QZ.sel===i?FZ.red:FZ.line);g.lineWidth=!isA&&QZ.sel===i?2:1;g.stroke();
-  tx(String(i+1),bx+18,by+28,13,FZ.muted,'left',600);tx(fitX(o,bw-90,15,500),bx+44,by+28,15,FZ.ink,'left',500);
-  if(isA&&right)tx('✓',bx+bw-18,by+28,16,'#16a34a','right',700);else if(isA&&picked)tx('✕',bx+bw-18,by+28,16,FZ.red,'right',700)});
- const fy=py+ph-26;
- if(QZ.ans==null)tx('Press 1, 2 or 3, or tap an answer',px+32,fy,12,FZ.faint,'left');
- else{tx(QZ.ok?'Hai! Correct. +300':'Not quite. The answer is: '+QZ.q.a,px+32,fy,13,QZ.ok?'#16a34a':FZ.redDark,'left',600);
-  tx('Terms known: '+(ST.terms||0),px+pw-32,fy,12,FZ.muted,'right');if(QZ.rt<QZ_RT-30&&frame%60<40)tx('Tap / SPACE to continue',W/2,py+ph+28,12,'#fff','center')}}
-function foAward(){const F=FO;grade=F.lvl;bestGrade=grade;ST.best=Math.max(ST.best,grade);if(grade==GRADES.length-1)ST.dan=1;score+=F.ps*200+F.perfects*50;checkBadges();state='stageclear';msg=msg||{};msg.t=260;QZ=null;if(mode==='career')qzStart(grade)}
+// v16: v15 Sensei grading questions removed (syllabus not signed off) – grading pass flows on exactly as live v14
+function foAward(){const F=FO;grade=F.lvl;bestGrade=grade;ST.best=Math.max(ST.best,grade);if(grade==GRADES.length-1)ST.dan=1;score+=F.ps*200+F.perfects*50;checkBadges();state='stageclear';msg=msg||{};msg.t=260}
 function foQuit(){const F=FO;if(!F)return;if(F.practice){state='title';sel=4}else{state='over';checkBadges();setTimeout(askName,600)}}
 function foUpdate(){const F=FO;F.t++;if(F.fb&&--F.fb.t<=0)F.fb=null;if(F.say&&--F.say.t<=0)F.say=null;if(F.ppT>0&&--F.ppT==0)F.pp='idle';if(F.hitT>0)F.hitT--;if(F.blockT>0)F.blockT--;
  if(F.ph==='rei'){if(F.t>90){F.ph='hajime';F.t=0;foSay('Hajime!',50);beep(660,.12)}return}
@@ -2899,7 +2856,7 @@ function drawFaceoff(){const F=FO;
   if(!F.passed)txt('Tip: wait for the arrow to turn GREEN, then press that way!',W/2,456,16,'#ffe082')}}
 // ---------- WKF KUMITE (grading test from Orange Belt / 11th Kyu) ----------
 const KUMITE_FROM=GRADES.findIndex(G=>G.n==='Orange Belt');
-const KMKEYS={ArrowLeft:'l',KeyA:'l',ArrowRight:'r',KeyD:'r',ArrowUp:'u',KeyW:'u',ArrowDown:'d',KeyS:'d',KeyX:'a',Space:'a',KeyK:'a',KeyF:'a',KeyL:'a',Enter:'a'};
+const KMKEYS={ArrowLeft:'r',KeyA:'r',ArrowRight:'l',KeyD:'l', /* v16: AO now on the right – ← is forward */ArrowUp:'u',KeyW:'u',ArrowDown:'d',KeyS:'d',KeyX:'a',Space:'a',KeyK:'a',KeyF:'a',KeyL:'a',Enter:'a'};
 const KMH={l:0,r:0,u:0,d:0};
 const MOVES={punch:{s:7,a:6,r:10,reach:1.35,pts:1,nm:'Kizami-zuki'},bkick:{s:12,a:6,r:14,reach:1.65,pts:2,nm:'Chudan geri'},hkick:{s:16,a:6,r:18,reach:1.75,pts:3,nm:'Jodan geri'},sweep:{s:10,a:6,r:12,reach:1.45,pts:0,nm:'Ashi barai'},gpunch:{s:8,a:6,r:10,reach:1.6,pts:3,nm:'Ashi barai + tsuki'}};
 const PEN=['','Chui 1','Chui 2','Chui 3','Hansoku Chui','Hansoku'];
@@ -2913,9 +2870,9 @@ function startKumite(lvl,practice){lvl=Math.max(KUMITE_FROM,Math.min(GRADES.leng
  state='kumite';for(const k in KMH)KMH[k]=0;beep(440,.15,'sine')}
 function kmSay(text,t=70){KM.say={text,t}}
 // v16: referee voice (Japanese voice if the device has one, otherwise a two-tone call) and a WebAudio kiai shout
-function refCall(text){beep(660,.1,'triangle');setTimeout(()=>beep(880,.14,'triangle'),110);try{if(!window.speechSynthesis)return;const u=new SpeechSynthesisUtterance(text.replace(/!/g,''));if(jaVoice){u.voice=jaVoice;u.lang=jaVoice.lang}else u.lang='ja-JP';u.rate=1;u.pitch=.8;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+function refCall(text){if(MUTED)return;beep(660,.1,'triangle');setTimeout(()=>beep(880,.14,'triangle'),110);try{if(!window.speechSynthesis)return;const u=new SpeechSynthesisUtterance(text.replace(/!/g,''));if(jaVoice){u.voice=jaVoice;u.lang=jaVoice.lang}else u.lang='ja-JP';u.rate=1;u.pitch=.8;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
 // v16: voiced kiai – speech synthesis shout (fast, low pitch; AO and AKA differ), WebAudio formant shout fallback
-let KIAI_LOG=[];function kiaiVoice(side,word){KIAI_LOG.push({side,word,t:Date.now()});let spoke=false;try{if(window.speechSynthesis&&speechSynthesis.getVoices().length){const vs=speechSynthesis.getVoices(),en=vs.filter(v=>/^en/i.test(v.lang)),u=new SpeechSynthesisUtterance(word==='Ear'?'Yah!':'Eeee!');u.voice=(en.length?en:vs)[side%Math.max(1,(en.length?en:vs).length)];u.rate=side?1.8:1.6;u.pitch=side?.55:.35;u.volume=1;speechSynthesis.cancel();speechSynthesis.speak(u);spoke=true}}catch(e){}if(!spoke)kiaiSnd(side,word)}
+let KIAI_LOG=[];function kiaiVoice(side,word){KIAI_LOG.push({side,word,t:Date.now()});if(MUTED)return;let spoke=false;try{if(window.speechSynthesis&&speechSynthesis.getVoices().length){const vs=speechSynthesis.getVoices(),en=vs.filter(v=>/^en/i.test(v.lang)),u=new SpeechSynthesisUtterance(word==='Ear'?'Yah!':'Eeee!');u.voice=(en.length?en:vs)[side%Math.max(1,(en.length?en:vs).length)];u.rate=side?1.8:1.6;u.pitch=side?.55:.35;u.volume=1;speechSynthesis.cancel();speechSynthesis.speak(u);spoke=true}}catch(e){}if(!spoke)kiaiSnd(side,word)}
 function kiaiSnd(side,word){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const t=ac.currentTime,d=word==='Ear'?.42:.5,f0=side?235:195,out=ac.createGain();out.gain.setValueAtTime(0,t);out.gain.linearRampToValueAtTime(.22,t+.025);out.gain.setValueAtTime(.2,t+d*.55);out.gain.exponentialRampToValueAtTime(.001,t+d);out.connect(ac.destination);
  const src=ac.createOscillator();src.type='sawtooth';src.frequency.setValueAtTime(f0*1.15,t);src.frequency.linearRampToValueAtTime(f0*1.3,t+.06);src.frequency.exponentialRampToValueAtTime(f0*.72,t+d); // falling shout pitch
  const nb=ac.createBuffer(1,ac.sampleRate*d,ac.sampleRate),ch=nb.getChannelData(0);for(let i=0;i<ch.length;i++)ch[i]=(Math.random()*2-1)*.35;const ns=ac.createBufferSource();ns.buffer=nb;const ng=ac.createGain();ng.gain.value=.5;ns.connect(ng);
@@ -2923,21 +2880,21 @@ function kiaiSnd(side,word){try{ac=ac||new (window.AudioContext||window.webkitAu
  const F=[[300,750],[2300,1200],[3000,2600]];F.forEach(([a,b2],i)=>{const bp=ac.createBiquadFilter();bp.type='bandpass';bp.Q.value=i?8:5;bp.frequency.setValueAtTime(a*(side?1.06:1),t);if(word==='Ear')bp.frequency.linearRampToValueAtTime(b2*(side?1.06:1),t+.14);const gg=ac.createGain();gg.gain.value=i?.5:1;src.connect(bp);ng.connect(bp);bp.connect(gg);gg.connect(out)});
  src.start(t);ns.start(t);src.stop(t+d);ns.stop(t+d)}catch(e){}}
 const KM_CER=['stand','rei1','turn','rei2','yoi'];
-function kmSkipCeremony(){const K_=KM;if(!K_||!KM_CER.includes(K_.ph))return false;kmReset();K_.ph='hajime';K_.t=0;kmSay('Shobu hajime!',60);refCall('Shobu hajime');for(const k in KMH)KMH[k]=0;K_.buf=0;return true}
+function kmSkipCeremony(){const K_=KM;if(!K_||!KM_CER.includes(K_.ph))return false;kmReset();K_.ph='hajime';K_.t=0;crowdCheer(-1,.8);kmSay('Shobu hajime!',60);refCall('Shobu hajime');for(const k in KMH)KMH[k]=0;K_.buf=0;return true}
 function kmReset(){const K_=KM;for(const f of [K_.ao,K_.aka]){f.x=f.side?5:3;f.act='idle';f.t=0;f.mv=null;f.cd=10;f.sweepWin=0;f.blockT=0}K_.ref.x=4}
 const KMR={punch:[.95,1.25],bkick:[1.15,1.55],hkick:[1.05,1.25],sweep:[.9,1.4]}; // v14: ranges where the fist/instep can land
 function kmAttack(f,mv){if(KM.ph!=='fight'||['punch','bkick','hkick','sweep','gpunch','hit','down'].includes(f.act)||f.cd>0){if(!f.side&&KM.ph==='fight'){KM.buf=12}return false}KM.buf=0;f.act=mv;f.mv=MOVES[mv];f.t=0;f.hitDone=0;{const o=f.side?KM.ao:KM.aka,ad=Math.abs(o.x-f.x),r=KMR[mv];f.lunge=r&&ad>r[1]&&ad<r[1]+.5?(ad-(r[0]+r[1])/2)/f.mv.s:0} /* step in (yori-ashi) during the set-up so techniques start from a realistic distance */if(mv==='punch'){f.gyaku=!f.gyaku}beep(mv==='punch'?520:mv==='sweep'?300:420,.05);return true}
 function kmPlayerAttack(){const o=KM.aka,f=KM.ao;if(o.act==='down'&&f.sweepWin>0)return kmAttack(f,'gpunch');kmAttack(f,KMH.u?'hkick':KMH.d?'sweep':KMH.r?'bkick':'punch')}
-function kmScore(f,pts,how){const K_=KM;K_.flash={x:MX0+f.x*PXM+f.face*72,y:FY-(pts>=3?150:pts==2?105:125),t:0,pts};f.score+=pts;if(K_.senshu===null)K_.senshu=f.side;K_.ph='yame';K_.t=0;f.slide={from:f.x,to:Math.max(.4,Math.min(7.6,f.x-f.face*1.1)),t:0};K_.kiai={side:f.side,t:0};K_.kiai.word=Math.random()<.5?'Eiii':'Ear';setTimeout(()=>kiaiVoice(f.side,K_.kiai.word),60);setTimeout(()=>refCall('Yame'),700);K_.ref.arm={side:f.side,pts};
+function kmScore(f,pts,how){const K_=KM;K_.flash={x:MX0+f.x*PXM+f.face*72,y:FY-(pts>=3?150:pts==2?105:125),t:0,pts};f.score+=pts;if(K_.senshu===null)K_.senshu=f.side;K_.ph='yame';K_.t=0;f.slide={from:f.x,to:Math.max(.4,Math.min(7.6,f.x-f.face*1.1)),t:0};K_.kiai={side:f.side,t:0};K_.kiai.word=Math.random()<.5?'Eiii':'Ear';setTimeout(()=>kiaiVoice(f.side,K_.kiai.word),60);setTimeout(()=>refCall('Yame'),700);crowdCheer(f.side,1);setTimeout(crowdHush,1500);K_.ref.arm={side:f.side,pts};
  kmSay('Yame! '+(f.side?'AKA':'AO')+' – '+how+' · '+PTSNM[pts]+' ('+pts+')',90);beep(f.side?220:880,.15);
  if(!f.side&&pts===3)ST.kmIppon=1}
-function kmJogai(f){const K_=KM;f.pens++;K_.ph='yame';K_.t=0;K_.ref.arm={side:f.side,pen:1};refCall('Yame');kmSay('Yame! Jogai – '+(f.side?'AKA':'AO')+' '+PEN[Math.min(5,f.pens)],90);beep(180,.2,'sawtooth');f.x=Math.max(.2,Math.min(7.8,f.x))}
+function kmJogai(f){const K_=KM;f.pens++;K_.ph='yame';K_.t=0;K_.ref.arm={side:f.side,pen:1};refCall('Yame');crowdHush();kmSay('Yame! Jogai – '+(f.side?'AKA':'AO')+' '+PEN[Math.min(5,f.pens)],90);beep(180,.2,'sawtooth');f.x=Math.max(.2,Math.min(7.8,f.x))}
 function kmFinish(){const K_=KM,a=K_.ao,b=K_.aka;let w=null;
  if(a.pens>=5){w=1;K_.why='AO Hansoku'}else if(b.pens>=5){w=0;K_.why='AKA Hansoku'}
  else if(a.score-b.score>=8){w=0;K_.why='8-point lead'}else if(b.score-a.score>=8){w=1;K_.why='8-point lead'}
  else if(a.score!==b.score){w=a.score>b.score?0:1;K_.why='Time – higher score'}
  else if(K_.senshu!==null){w=K_.senshu;K_.why='Tie – Senshu (first score)'}else{w=null;K_.why='Hikiwake (draw) – try again'}
- K_.winner=w;K_.ph='end';K_.t=0;kmSay('Yame!',60);
+ K_.winner=w;K_.ph='end';if(w!==null)crowdCheer(w,1.1);K_.t=0;kmSay('Yame!',60);
  if(w===0){ST.kmWins=(ST.kmWins||0)+1;if(a.pens===0)ST.kmClean=1}checkBadges()}
 // v14: contact geometry (same rig as the drawing). Kicks score only with the instep, punches only with the fist (knuckles).
 function kmGeo(f){if(!f.var)return null;const P=rigPose(f),hip=P.hip,S=[hip[0]+Math.sin(P.lean)*RIG.torso,hip[1]-Math.cos(P.lean)*RIG.torso],TN=P.turn||0,px=MX0+f.x*PXM,W_=p=>[px+f.face*p[0],FY+p[1]];
@@ -2979,13 +2936,13 @@ function kmStep(f,o,isAI){
  if(f.side===0&&f.x>o.x-.6)f.x=o.x-.6;if(f.side===1&&f.x<o.x+.6)f.x=o.x+.6}
 function kmUpdate(){const K_=KM;K_.t++;if(K_.say&&--K_.say.t<=0)K_.say=null;if(K_.fb&&--K_.fb.t<=0)K_.fb=null;
  const seq={stand:['rei1',40,'Shushin ni rei!'],rei1:['turn',70,''],turn:['rei2',30,'Otagai ni rei!'],rei2:['yoi',70,'Yoi'],yoi:['hajime',55,'Shobu hajime!']}; // v16 ceremony: stand facing the referee, bow to the referee, turn, bow to each other, yoi (fudo dachi), Hajime
- if(seq[K_.ph]){if(K_.t>seq[K_.ph][1]){const n=seq[K_.ph];K_.ph=n[0];K_.t=0;if(n[2]){kmSay(n[2],n[0]==='hajime'?60:80);if(n[0]==='hajime')refCall('Shobu hajime');else if(n[0]!=='yoi')beep(520,.08,'triangle')}}return}
+ if(seq[K_.ph]){if(K_.t>seq[K_.ph][1]){const n=seq[K_.ph];K_.ph=n[0];K_.t=0;if(n[2]){kmSay(n[2],n[0]==='hajime'?60:80);if(n[0]==='hajime'){refCall('Shobu hajime');crowdCheer(-1,.8)}else if(n[0]!=='yoi')beep(520,.08,'triangle')}}return}
  if(K_.ph==='hajime'){if(K_.t>55){K_.ph='fight';K_.t=0}return}
  if(K_.ph==='yame'){K_.ref.x+=(4-K_.ref.x)*.08;if(K_.kiai)K_.kiai.t++;
   for(const f of [K_.ao,K_.aka]){if(f.slide){const S_=f.slide;S_.t++;const k=EZ(Math.min(1,S_.t/26));f.x=LRP(S_.from,S_.to,k);if(S_.t>=26)f.slide=null} // v16: scorer slides back 2-3 steps (yori-ashi) while shouting the kiai
    if((K_.t===16&&f.act!=='down')||K_.t===40){f.act='idle';f.mv=null;f.t=0}
    if(K_.t>48&&!f.slide){const mk=f.side?5:3;f.x+=(mk-f.x)*.09}} // v16: both return to their marks
-  if(K_.t===150){const a=K_.ao,b=K_.aka;if(a.pens>=5||b.pens>=5||Math.abs(a.score-b.score)>=8){kmFinish();return}kmReset();K_.ref.arm=null;K_.kiai=null;kmSay('Tsuzukete hajime!',60);refCall('Tsuzukete hajime');K_.ph='hajime';K_.t=0}return}
+  if(K_.t===150){const a=K_.ao,b=K_.aka;if(a.pens>=5||b.pens>=5||Math.abs(a.score-b.score)>=8){kmFinish();return}kmReset();K_.ref.arm=null;K_.kiai=null;kmSay('Tsuzukete hajime!',60);refCall('Tsuzukete hajime');crowdCheer(-1,.5);K_.ph='hajime';K_.t=0}return}
  if(K_.ph==='end'){if(K_.t===60)kmSay(K_.winner===null?'Hikiwake':K_.winner?'Aka no kachi!':'Ao no kachi!',90);if(K_.t===150){kmReset();kmSay('Otagai ni rei',80)}if(K_.t>230){K_.ph='result';K_.t=0}return}
  if(K_.ph==='result')return;
  if(--K_.time<=0){kmFinish();return}
@@ -2997,11 +2954,12 @@ function kmUpdate(){const K_=KM;K_.t++;if(K_.say&&--K_.say.t<=0)K_.say=null;if(K
 function kmInput(k,down){const K_=KM;if(!K_)return;if(KM_CER.includes(K_.ph)){if(down)kmSkipCeremony();return} /* v16: input locked during the ceremony; any key/tap skips */
  if(k==='a'&&down){if(K_.ph==='result'){if(K_.t<25)return;if(K_.winner===0){if(K_.practice)startKumite(Math.min(GRADES.length-1,K_.lvl+1),true);else kmAward()}else{startKumite(K_.lvl,K_.practice);KM.retry=1}return}kmPlayerAttack();return}
  if(k!=='a')KMH[k]=down?1:0}
-function kmAward(){grade=KM.lvl;bestGrade=grade;ST.best=Math.max(ST.best,grade);if(grade==GRADES.length-1)ST.dan=1;score+=KM.ao.score*150;checkBadges();state='stageclear';msg=msg||{};msg.t=260;QZ=null;if(mode==='career')qzStart(grade)}
+function kmAward(){grade=KM.lvl;bestGrade=grade;ST.best=Math.max(ST.best,grade);if(grade==GRADES.length-1)ST.dan=1;score+=KM.ao.score*150;checkBadges();state='stageclear';msg=msg||{};msg.t=260}
 function kmQuit(){if(KM.practice){state='title';sel=5}else{state='over';checkBadges();setTimeout(askName,600)}}
 // ---- drawing ----
 // ---- Human kumite rig (v11): FK + 2-bone IK, eased keyframes, modelled on the WKF reference bout (blue fighter) ----
 const EZ=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2,LRP=(a,b,k)=>a+(b-a)*k,L2=(p,q,k)=>[LRP(p[0],q[0],k),LRP(p[1],q[1],k)],CL=(v,a,b)=>Math.max(a,Math.min(b,v));
+const SLIM=.68; // v16: competitors slimmed to the referee's proportions
 const RIG={thigh:51,shin:52,torso:58,uarm:31,farm:30,hipH:96};
 function ik2(a,c,l1,l2,bend){const dx=c[0]-a[0],dy=c[1]-a[1];let d=Math.hypot(dx,dy)||1;const dd=Math.min(d,l1+l2-.5);const ang=Math.atan2(dy,dx);const A=Math.acos(CL((l1*l1+dd*dd-l2*l2)/(2*l1*dd),-1,1));const t=ang+bend*A;const end=[a[0]+dx/d*dd,a[1]+dy/d*dd];return[[a[0]+Math.cos(t)*l1,a[1]+Math.sin(t)*l1],end]}
 const INK='#151826';
@@ -3079,23 +3037,23 @@ function kmFighterDraw(f){const K_=KM;studioSync();if(!f.var){const r=(f.side?K_
  const [kb,bf]=ikH(hipB,P.bf,RIG.thigh,RIG.shin,P.kbH),[kf,ff]=ikH(hipF,P.ff,RIG.thigh,RIG.shin,P.kfH);
  const shinAng=(k,a)=>Math.atan2(a[1]-k[1],a[0]-k[0])-Math.PI/2; // instep in line with the shin (toes lead along the kick)
  const ffA=P.ffA==null?shinAng(kf,ff)+.15:P.ffA;
- const shF=[S[0]+3+18*TN,S[1]+4+5*TN],shB=[S[0]+5-20*TN,S[1]+4-3*TN]; // v16: rear shoulder sits on the torso, not behind it // both shoulders visible when front-on
+ const shF=[S[0]+2+14*TN,S[1]+4+5*TN],shB=[S[0]+4-15*TN,S[1]+4-3*TN]; // v16: rear shoulder sits on the torso, not behind it // both shoulders visible when front-on
  const [eb,rh]=ikE(shB,P.rh,RIG.uarm,RIG.farm,P.ebH||[shB[0]+12,shB[1]+30]) /* v16: rear elbow tucked down-and-forward so the sleeve sits on the body, not behind it */,[ef,lh]=ikE(shF,P.lh,RIG.uarm,RIG.farm,P.efH);
  const LN2='#5c6678',PT=(a,b,t)=>[LRP(a[0],b[0],t),LRP(a[1],b[1],t)],GIK='#cdd5e2';
  const MITT=(h,e)=>{const d=Math.atan2(h[1]-e[1],h[0]-e[0]);g.save();g.translate(h[0],h[1]);g.rotate(d);g.fillStyle=INK;g.beginPath();g.ellipse(2,0,12,10.5,0,0,7);g.fill();g.fillStyle=col;g.beginPath();g.ellipse(2,0,10,8.5,0,0,7);g.fill();g.fillStyle='#0003';g.beginPath();g.ellipse(2,3.5,9,4.5,0,0,Math.PI);g.fill();g.fillStyle='#fff5';g.beginPath();g.ellipse(4,-4,4,2,0,0,7);g.fill();g.fillStyle=col;g.strokeStyle=INK;g.lineWidth=2;g.beginPath();g.rect(-12,-6,6,12);g.fill();g.stroke();g.restore()}; // WKF fist mitt with cuff
- const ARM=(sh,e,h,c,n)=>{const k=n?.78:1;rigLimb(sh,e,18*k,19*k,c,LN2);const w=PT(e,h,.55);rigLimb(w,h,9,8,skin);rigLimb(e,w,19*k,24*k,c,LN2);
+ const ARM=(sh,e,h,c,n)=>{const k=(n?.78:1)*SLIM;rigLimb(sh,e,18*k,19*k,c,LN2);const w=PT(e,h,.55);rigLimb(w,h,9,8,skin);rigLimb(e,w,19*k,24*k,c,LN2);
    g.strokeStyle=LN2;g.lineWidth=1.2;const m=PT(sh,e,.5);g.beginPath();g.moveTo(m[0]-3,m[1]-4);g.lineTo(m[0]+3,m[1]+4);g.stroke();MITT(h,e)}; // big sleeve ending on the forearm
- const LEG=(hp,k,a,ang,c,fl)=>{rigLimb(hp,k,24,22,c,LN2);const hem=PT(k,a,.4);
-   const pt=PT(hem,a,-.05);rigLimbRaw(pt,a,15.5,14,INK);rigLimbRaw(pt,a,12,10.5,col);g.strokeStyle='#0005';g.lineWidth=1.2;for(const t of [.35,.7]){const q=PT(pt,a,t);const dx=a[0]-pt[0],dy=a[1]-pt[1],L=Math.hypot(dx,dy)||1;g.beginPath();g.moveTo(q[0]-dy/L*6,q[1]+dx/L*6);g.lineTo(q[0]+dy/L*6,q[1]-dx/L*6);g.stroke()} // shin pad
+ const LEG=(hp,k,a,ang,c,fl)=>{rigLimb(hp,k,24*SLIM,22*SLIM,c,LN2);const hem=PT(k,a,.4);
+   const pt=PT(hem,a,-.05);rigLimbRaw(pt,a,12.5,11.5,INK);rigLimbRaw(pt,a,9.5,8.5,col);g.strokeStyle='#0005';g.lineWidth=1.2;for(const t of [.35,.7]){const q=PT(pt,a,t);const dx=a[0]-pt[0],dy=a[1]-pt[1],L=Math.hypot(dx,dy)||1;g.beginPath();g.moveTo(q[0]-dy/L*6,q[1]+dx/L*6);g.lineTo(q[0]+dy/L*6,q[1]-dx/L*6);g.stroke()} // shin pad
    rigFoot([a[0],a[1]],ang,col,fl);
-   rigLimb(k,hem,22,26,c,LN2); // wide trouser leg flaring to the hem
-   g.strokeStyle=LN2;g.lineWidth=1.2;const m=PT(hp,k,.55),m2=PT(k,hem,.55);g.beginPath();g.moveTo(m[0]-6,m[1]);g.quadraticCurveTo(m[0],m[1]+3,m[0]+6,m[1]-2);g.moveTo(m2[0]-6,m2[1]-2);g.quadraticCurveTo(m2[0],m2[1]+2,m2[0]+6,m2[1]-3);g.stroke()}; // trouser folds
+   rigLimb(k,hem,22*SLIM,25*SLIM,c,LN2); // v16 slim: trouser leg flaring to the hem
+   g.strokeStyle=LN2;g.lineWidth=1.2;const m=PT(hp,k,.55),m2=PT(k,hem,.55);g.beginPath();g.moveTo(m[0]-4,m[1]);g.quadraticCurveTo(m[0],m[1]+2,m[0]+4,m[1]-1);g.moveTo(m2[0]-4,m2[1]-1);g.quadraticCurveTo(m2[0],m2[1]+2,m2[0]+4,m2[1]-2);g.stroke()}; // trouser folds
  // far side first
  ARM(shB,eb,rh,GIS,1);LEG(hipB,kb,bf,P.bfA,GIS,P.bfFlip);
  // jacket: broad shoulders, slim waist, skirt hanging below the belt
  const nx=Math.cos(P.lean),ny=Math.sin(P.lean);
- const JW=1+.95*TN;g.beginPath();g.moveTo(S[0]-9*JW*nx,S[1]-9*ny+4);g.quadraticCurveTo(S[0]-12*JW*nx,S[1]+8,hip[0]-11-10*TN,hip[1]-3+2*TN);g.lineTo(hip[0]-14-10*TN,hip[1]+26+2*TN);g.lineTo(hip[0]+17+10*TN,hip[1]+26-10*TN);g.lineTo(hip[0]+13+10*TN,hip[1]-3-8*TN);g.lineTo(S[0]+15*JW*nx,S[1]+15*ny);g.quadraticCurveTo(S[0]+2,S[1]-6,S[0]-9*JW*nx,S[1]-9*ny+4);g.closePath();g.fillStyle=GI;g.fill();g.strokeStyle=INK;g.lineWidth=2.6;g.lineJoin='round';g.stroke();
- g.fillStyle=GIK;g.beginPath();g.moveTo(S[0]-7*nx,S[1]-7*ny+5);g.lineTo(hip[0]-10,hip[1]-3);g.lineTo(hip[0]-13,hip[1]+25);g.lineTo(hip[0]-7,hip[1]+25);g.lineTo(hip[0]-4,hip[1]);g.lineTo(S[0]-3*nx,S[1]-3*ny+5);g.closePath();g.fill(); // cel shadow on the back half
+ const JW=1+.95*TN;g.beginPath();g.moveTo(S[0]-7*JW*nx,S[1]-7*ny+4);g.quadraticCurveTo(S[0]-9*JW*nx,S[1]+8,hip[0]-8-7*TN,hip[1]-3+2*TN);g.lineTo(hip[0]-11-7*TN,hip[1]+24+2*TN);g.lineTo(hip[0]+13+7*TN,hip[1]+24-10*TN);g.lineTo(hip[0]+10+7*TN,hip[1]-3-8*TN);g.lineTo(S[0]+12*JW*nx,S[1]+12*ny);g.quadraticCurveTo(S[0]+2,S[1]-6,S[0]-7*JW*nx,S[1]-7*ny+4);g.closePath();g.fillStyle=GI;g.fill();g.strokeStyle=INK;g.lineWidth=2.6;g.lineJoin='round';g.stroke();
+ g.fillStyle=GIK;g.beginPath();g.moveTo(S[0]-5*nx,S[1]-5*ny+5);g.lineTo(hip[0]-7,hip[1]-3);g.lineTo(hip[0]-10,hip[1]+23);g.lineTo(hip[0]-5,hip[1]+23);g.lineTo(hip[0]-3,hip[1]);g.lineTo(S[0]-2*nx,S[1]-2*ny+5);g.closePath();g.fill(); // cel shadow on the back half
  g.strokeStyle=LN2;g.lineWidth=1.2;g.beginPath();g.moveTo(hip[0]+4,hip[1]+4);g.lineTo(hip[0]+7,hip[1]+30);g.moveTo(hip[0]-9,hip[1]+12);g.lineTo(hip[0]-11,hip[1]+25);g.stroke(); // skirt overlap + fold
  g.fillStyle=skin;g.beginPath();g.moveTo(S[0]+1,S[1]-1);g.lineTo(S[0]+10*nx+3,S[1]+10*ny);g.lineTo(S[0]+6+Math.sin(P.lean)*18,S[1]+18);g.closePath();g.fill();
  g.globalAlpha=1-TN;g.lineCap='butt';g.strokeStyle=INK;g.lineWidth=9;g.beginPath();g.moveTo(S[0]-1,S[1]-1);g.lineTo(hip[0]+12,hip[1]-4);g.stroke();g.strokeStyle='#ffffff';g.lineWidth=6.5;g.stroke(); // wide lapel
@@ -3132,9 +3090,9 @@ function kmFighterDraw(f){const K_=KM;studioSync();if(!f.var){const r=(f.side?K_
   const vx=hx-B.px,vy=hy-B.py,ax=vx-B.vx,ay=vy-B.vy;B.px=hx;B.py=hy;B.vx=vx;B.vy=vy;
   for(let i=0;i<2;i++){const rest=.12+i*.22-CL(vx*.03,-.5,.5),k=.09,d=.14+i*.03;B.v[i]+=-k*(B.a[i]-rest)-d*B.v[i]-ax*.05*(1+i*.3)+ay*.02*Math.sin(B.a[i]);B.v[i]=CL(B.v[i],-.25,.25);B.a[i]=CL(B.a[i]+B.v[i],-.12,1.25)} // v14: tails hang down and away from the guard hands
   g.save();g.translate(hip[0],hip[1]-3-4*TN);g.rotate(P.lean*.35-.28*TN);g.fillStyle=col;g.strokeStyle='#0005';g.lineWidth=1;
-  g.strokeStyle=INK;g.lineWidth=1.8;g.beginPath();g.rect(-15-8*TN,-4.5,31+16*TN,9);g.fill();g.stroke();
-  const TL=[36,41];for(let i=0;i<2;i++){g.save();g.translate(13*(1-TN),3);g.rotate(B.a[i]);g.beginPath();g.moveTo(-3,0);g.lineTo(3,0);g.lineTo(3.6,TL[i]);g.lineTo(-3.6,TL[i]-1.5);g.closePath();g.fill();g.stroke();g.restore()} // long tails hanging to mid-thigh
-  g.beginPath();g.ellipse(13*(1-TN),1,6,5.5,0,0,7);g.fill();g.stroke();g.restore()}
+  g.strokeStyle=INK;g.lineWidth=1.8;g.beginPath();g.rect(-11-6*TN,-4,23+12*TN,8);g.fill();g.stroke();
+  const TL=[36,41];for(let i=0;i<2;i++){g.save();g.translate(9*(1-TN),3);g.rotate(B.a[i]);g.beginPath();g.moveTo(-3,0);g.lineTo(3,0);g.lineTo(3.6,TL[i]);g.lineTo(-3.6,TL[i]-1.5);g.closePath();g.fill();g.stroke();g.restore()} // long tails hanging to mid-thigh
+  g.beginPath();g.ellipse(9*(1-TN),1,5,4.5,0,0,7);g.fill();g.stroke();g.restore()}
  // lead arm in front (drawn after the belt so the belt never wraps the arms)
  ARM(shF,ef,lh,GI);
 
@@ -3157,35 +3115,76 @@ function kmBoards(){const y=304,h=46,cw=230,tot=SPONSORS.length*cw,off=(frame*.5
  for(let x=-off;x<W;x+=tot)for(let i=0;i<SPONSORS.length;i++){const S=SPONSORS[i],bx=x+i*cw;if(bx>W||bx+cw<0)continue;rr(bx+4,y+3,cw-8,h-6,4,'#f7f7f5');
   if(S.im.complete&&S.im.naturalWidth){const ih=h-12,iw=S.im.naturalWidth*ih/S.im.naturalHeight;g.drawImage(S.im,bx+12,y+6,iw,ih);g.font='bold 13px "Trebuchet MS",Arial';g.fillStyle='#263238';g.textAlign='left';g.fillText(S.n,bx+18+iw,y+h/2+5)}}
  g.restore();g.fillStyle='rgba(255,255,255,.08)';g.fillRect(0,y,W,2)}
+// ---------- v16: cheering crowd (cached sprites, WebAudio murmur / cheers / claps, no audio files) ----------
+const CROWD={rows:null,ev:null,lv:0};
+function crowdBuild(){let sd=7;const rnd=()=>(sd=(sd*16807)%2147483647)/2147483647;
+ const SK=['#f6d7b8','#e8b98f','#c68b5e','#a86f45','#7a4a2a','#5a3620'],HR=['#1c120c','#3b2416','#6b4423','#b8860b','#d9c08a','#2b2b2b','#8d8d8d'],CL=['#5c6b7a','#7a5c5c','#5c7a66','#6b5c7a','#8a7a5a','#4f5f6f','#7a6a6a','#556b2f','#6f6f6f'];
+ const rows=[];for(let r=0;r<3;r++){const y0=[206,236,266][r],sc=[.62,.72,.82][r],ppl=[];for(let x=-20;x<W+40;x+=22+rnd()*8){ppl.push({x,sk:SK[rnd()*SK.length|0],hr:HR[rnd()*HR.length|0],cl:CL[rnd()*CL.length|0],hs:rnd()*3|0,fl:rnd()<.28?(rnd()<.5?1:2):0,dy:rnd()*3})}
+  const mk=up=>{const c=document.createElement('canvas');c.width=W+60;c.height=60;const q=c.getContext('2d');q.translate(20,0);
+   for(const P of ppl){const side=P.x<W/2?'#c62828':'#1565c0',cx=P.x,by=52+P.dy;q.save();q.translate(cx,by);q.scale(sc,sc);
+    // arms (cheer: up in a V)
+    q.strokeStyle=P.cl;q.lineWidth=5;q.lineCap='round';if(up){q.beginPath();q.moveTo(-8,-26);q.lineTo(-14,-52);q.moveTo(8,-26);q.lineTo(14,-52);q.stroke();q.fillStyle=P.sk;q.beginPath();q.arc(-14,-53,3,0,7);q.arc(14,-53,3,0,7);q.fill()}
+    // body + head + hair
+    q.fillStyle=P.cl;q.beginPath();q.roundRect?q.roundRect(-11,-28,22,34,7):q.rect(-11,-28,22,34);q.fill();
+    q.fillStyle=P.sk;q.beginPath();q.arc(0,-36,8,0,7);q.fill();q.fillStyle=P.hr;q.beginPath();if(P.hs===0)q.arc(0,-38,8.4,Math.PI,0);else if(P.hs===1){q.arc(0,-38,8.6,Math.PI*.9,Math.PI*2.1)}else{q.arc(0,-38,8.4,Math.PI,0);q.rect(-8.4,-38,3,12);q.rect(5.4,-38,3,12)}q.fill();
+    // supporter kit: flag (1) or scarf (2) in the colour of the fighter on that side; no text
+    if(P.fl===1){const fx=up?14:10,fy=up?-53:-14;q.strokeStyle='#ddd';q.lineWidth=1.5;q.beginPath();q.moveTo(fx,fy);q.lineTo(fx,fy-20);q.stroke();q.fillStyle=side;q.fillRect(fx,fy-20,13,8)}
+    if(P.fl===2){q.fillStyle=side;q.fillRect(-10,-28,20,4);if(up){q.fillRect(-16,-56,32,5)}else q.fillRect(4,-26,4,12)}
+    q.restore()}return c};
+  rows.push({y0,n:mk(0),u:mk(1),ph:rnd()*6})}
+ CROWD.rows=rows}
+function crowdDraw(){if(!CROWD.rows)crowdBuild();const K_=KM,E=CROWD.ev;g.save();g.globalAlpha=.55; /* dimmed so the fighters stay the focus */
+ CROWD.rows.forEach((R_,i)=>{const sw=Math.sin(frame*.018+R_.ph)*2,bob=Math.sin(frame*.05+R_.ph)*.8,y=R_.y0-52+bob;
+  const hot=E&&E.t<E.dur,jump=hot?-Math.abs(Math.sin(E.t*.35+i))*4:0;
+  if(!hot){g.drawImage(R_.n,-20+sw,y);return}
+  // cheering half (or both): arms up and jumping
+  const halves=E.side<0?[0,1]:[E.side?0:1]; /* AKA fans on the left, AO fans on the right */for(let h=0;h<2;h++){const on=halves.includes(h);g.save();g.beginPath();g.rect(h*W/2,0,W/2,H);g.clip();g.drawImage(on?R_.u:R_.n,-20+sw,y+(on?jump:0));g.restore()}});
+ g.restore();if(E)E.t++}
+// audio
+function crowdAudio(){if(CROWD.au||MUTED)return CROWD.au;try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const m=ac.createGain();m.gain.value=0;m.connect(ac.destination);
+ const len=ac.sampleRate*2,nb=ac.createBuffer(1,len,ac.sampleRate),ch=nb.getChannelData(0);let b0=0;for(let i=0;i<len;i++){b0=.97*b0+.03*(Math.random()*2-1);ch[i]=b0*3}
+ const src=ac.createBufferSource();src.buffer=nb;src.loop=true;const lp=ac.createBiquadFilter();lp.type='bandpass';lp.frequency.value=420;lp.Q.value=.6;const mg=ac.createGain();mg.gain.value=1;src.connect(lp);lp.connect(mg);mg.connect(m);src.start();
+ const wb=ac.createBuffer(1,ac.sampleRate*2,ac.sampleRate),wc=wb.getChannelData(0);for(let i=0;i<wc.length;i++)wc[i]=Math.random()*2-1;
+ CROWD.au={m,wb,lvl:-1}}catch(e){}return CROWD.au}
+function crowdTick(){const on=state==='kumite'&&!MUTED&&KM;const A=on?crowdAudio():CROWD.au;if(!A)return;let L=on?.035:0;if(on&&KM.hush>0){KM.hush--;L=.012}if(on&&KM.ph==='result')L=.02;
+ if(A.lvl!==L){A.m.gain.setTargetAtTime(L,ac.currentTime,.4);A.lvl=L}}
+function crowdCheer(side,amp){CROWD.ev={side,t:0,dur:side<0?45:80};CROWD.log=(CROWD.log||[]);CROWD.log.push({side,amp});const A=crowdAudio();if(!A||MUTED)return;
+ try{const t=ac.currentTime+(side<0?0:.28),d=side<0?1.4:2.2; /* starts just after the kiai so the shout cuts through */
+  const pan=ac.createStereoPanner?ac.createStereoPanner():null;if(pan)pan.pan.value=side<0?0:(side===0?.55:-.55); // AO fans on the right, AKA fans on the left
+  const out=ac.createGain();out.gain.setValueAtTime(0,t);out.gain.linearRampToValueAtTime(.075*amp,t+.18);out.gain.setTargetAtTime(0,t+d*.45,d*.25);(pan?(out.connect(pan),pan):out).connect(ac.destination);
+  const n=ac.createBufferSource();n.buffer=A.wb;const bp=ac.createBiquadFilter();bp.type='bandpass';bp.frequency.value=1300;bp.Q.value=.5;const bp2=ac.createBiquadFilter();bp2.type='peaking';bp2.frequency.value=700;bp2.gain.value=6;n.connect(bp);bp.connect(bp2);bp2.connect(out);n.start(t);n.stop(t+d+1);
+  const claps=side<0?8:16;for(let i=0;i<claps;i++){const ct=t+.1+Math.random()*d*.8,c=ac.createBufferSource();c.buffer=A.wb;const hp=ac.createBiquadFilter();hp.type='bandpass';hp.frequency.value=1800+Math.random()*900;hp.Q.value=1.2;const cg=ac.createGain();cg.gain.setValueAtTime(.05*amp,ct);cg.gain.exponentialRampToValueAtTime(.0005,ct+.06);c.connect(hp);hp.connect(cg);cg.connect(pan||ac.destination);c.start(ct,Math.random());c.stop(ct+.08)}}catch(e){}}
+function crowdHush(){if(KM)KM.hush=110;CROWD.log=(CROWD.log||[]);CROWD.log.push({hush:1})}
 function drawKumite(){const K_=KM,a=K_.ao,b=K_.aka;
  g.fillStyle='#37474f';g.fillRect(0,0,W,H);g.fillStyle='#455a64';g.fillRect(0,0,W,300);
- rr(W/2-200,140,400,34,8,'#b71c1c');txt('FORZA KARATE CLUB',W/2,165,22,'#fff');kmBoards();
+ rr(W/2-200,140,400,34,8,'#b71c1c');txt('FORZA KARATE CLUB',W/2,165,22,'#fff');crowdDraw();kmBoards();
  // mat: 8m x 8m blue competition area with red 1m border (side-on, 80px per metre)
  g.fillStyle='#c62828';g.beginPath();g.moveTo(MX0-PXM-40,FY-40);g.lineTo(MX0+9*PXM+40,FY-40);g.lineTo(MX0+9*PXM+80,FY+60);g.lineTo(MX0-PXM-80,FY+60);g.fill();
  g.fillStyle='#1565c0';g.beginPath();g.moveTo(MX0,FY-32);g.lineTo(MX0+8*PXM,FY-32);g.lineTo(MX0+8*PXM+8,FY+46);g.lineTo(MX0-8,FY+46);g.fill();
  g.strokeStyle='rgba(255,255,255,.5)';g.lineWidth=3;for(const sx of [3,5]){g.beginPath();g.moveTo(MX0+sx*PXM,FY-14);g.lineTo(MX0+sx*PXM,FY+16);g.stroke()}
  g.fillStyle='rgba(255,255,255,.7)';g.font='bold 12px Arial';g.textAlign='center';for(let m=0;m<=8;m+=2)g.fillText(m+'m',MX0+m*PXM,FY+60);
- kmRefDraw();kmFighterDraw(a);kmFighterDraw(b);kmFlashDraw();
+ g.save();g.translate(2*MX0+8*PXM,0);g.scale(-1,1);KM_MIR=1;kmRefDraw();kmFighterDraw(a);kmFighterDraw(b);kmFlashDraw();KM_MIR=0;g.restore(); // v16: AO and AKA swapped – the whole fighting layer is mirrored (AO on the right, AKA on the left)
  // scoreboard
  rr(10,10,W-20,124,12,'rgba(0,0,0,.75)');
- rr(18,18,300,80,10,'#1565c0');txt('AO (you)',30,44,18,'#fff','left');txt(String(a.score),300,86,48,'#fff','right');if(K_.senshu===0)txt('S',40,86,22,'#ffd600','left');
- rr(W-318,18,300,80,10,'#c62828');txt('AKA · '+K_.name,W-30,44,15,'#fff','right');txt(String(b.score),W-300,86,48,'#fff','left');if(K_.senshu===1)txt('S',W-40,86,22,'#ffd600','right');
+ rr(18,18,300,80,10,'#c62828');txt('AKA · '+K_.name,30,44,15,'#fff','left');txt(String(b.score),300,86,48,'#fff','right');if(K_.senshu===1)txt('S',40,86,22,'#ffd600','left');
+ rr(W-318,18,300,80,10,'#1565c0');txt('AO (you)',W-30,44,18,'#fff','right');txt(String(a.score),W-300,86,48,'#fff','left');if(K_.senshu===0)txt('S',W-40,86,22,'#ffd600','right'); // v16: AKA left, AO right
  const sec=Math.ceil(Math.max(0,K_.time)/60);txt(Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0'),W/2,70,40,sec<=15?'#ff5252':'#fff');
  txt(K_.practice?'Kumite practice · '+short(GRADES[K_.lvl]):'🎓 Kumite grading: '+short(GRADES[K_.lvl])+(K_.retry?' (retry)':''),W/2,96,14,'#ffe082');
- kmPens(a.pens,22,'left');kmPens(b.pens,W-22,'right');
+ kmPens(b.pens,22,'left');kmPens(a.pens,W-22,'right');
  // legend
- rr(10,H-46,W-20,38,10,'rgba(0,0,0,.6)');txt('→ step in · ← step back · ↓ block · X/🥊 kizami/gyaku-zuki (1) · X+→ body kick (2) · X+↑ head kick (3) · X+↓ sweep, then X (3) · win: 8-pt lead or most at time',W/2,H-21,13,'#fff');
- if(K_.say){txt(K_.say.text,W/2,236,K_.say.text.length>26?26:36,'#ffd600');const rx=MX0+K_.ref.x*PXM;bubble(K_.say.text.split(' – ')[0].split(' · ')[0],rx,FY-158)} // v16: referee speech bubble
- if(K_.kiai&&K_.kiai.t<70){const f=K_.kiai.side?b:a,k=K_.kiai.t/70;g.globalAlpha=1-k*k;if(K_.kiai.t<26){const cx=MX0+f.x*PXM+f.face*24,cy=FY-188,R0=10+K_.kiai.t*1.6;g.strokeStyle='#fff59d';g.lineWidth=3;g.lineCap='round';for(let i=0;i<7;i++){const an=-Math.PI/2+(i-3)*.32*f.face;g.beginPath();g.moveTo(cx+Math.cos(an)*R0*f.face,cy+Math.sin(an)*R0);g.lineTo(cx+Math.cos(an)*(R0+12)*f.face,cy+Math.sin(an)*(R0+12));g.stroke()}}g.globalAlpha=1}
- if(K_.fb)txt(K_.fb.text,MX0+K_.fb.x*PXM,FY-200,18,'#fff');
+ rr(10,H-46,W-20,38,10,'rgba(0,0,0,.6)');txt('← step in · → step back · ↓ block · X/🥊 kizami/gyaku-zuki (1) · X+← body kick (2) · X+↑ head kick (3) · X+↓ sweep, then X (3) · win: 8-pt lead or most at time',W/2,H-21,13,'#fff');
+ if(K_.say){txt(K_.say.text,W/2,236,K_.say.text.length>26?26:36,'#ffd600');const rx=VX(MX0+K_.ref.x*PXM);bubble(K_.say.text.split(' – ')[0].split(' · ')[0],rx,FY-158)} // v16: referee speech bubble
+ if(K_.kiai&&K_.kiai.t<70){const f=K_.kiai.side?b:a,k=K_.kiai.t/70;g.globalAlpha=1-k*k;if(K_.kiai.t<26){const cx=VX(MX0+f.x*PXM+f.face*24),cy=FY-188,R0=10+K_.kiai.t*1.6;g.strokeStyle='#fff59d';g.lineWidth=3;g.lineCap='round';for(let i=0;i<7;i++){const an=-Math.PI/2+(i-3)*.32;g.beginPath();g.moveTo(cx+Math.cos(an)*R0,cy+Math.sin(an)*R0);g.lineTo(cx+Math.cos(an)*(R0+12),cy+Math.sin(an)*(R0+12));g.stroke()}}g.globalAlpha=1}
+ if(K_.fb)txt(K_.fb.text,VX(MX0+K_.fb.x*PXM),FY-200,18,'#fff');
  if(K_.ph==='result'){g.fillStyle='rgba(0,0,0,.7)';g.fillRect(0,0,W,H);const won=K_.winner===0;
   txt(won?(K_.practice?'🏆 Ao no kachi!':'🎓 KUMITE GRADING PASSED!'):'Not this time…',W/2,170,42,won?'#ffd600':'#ff8a65');
-  txt('AO '+a.score+' – '+b.score+' AKA  ·  '+K_.why,W/2,218,22,'#fff');
+  txt('AKA '+b.score+' – '+a.score+' AO  ·  '+K_.why,W/2,218,22,'#fff');
   if(won&&!K_.practice){beltIcon(W/2-75,250,GRADES[K_.lvl],3);txt('Earned: '+GRADES[K_.lvl].n+(GRADES[K_.lvl].k?' ('+GRADES[K_.lvl].k+')':''),W/2,345,24,'#80deea')}
   txt(won?(K_.practice?'X / SPACE next opponent · M menu':'X / SPACE to receive your belt'):'X / SPACE to retry the kumite (no need to redo the run) · M '+(K_.practice?'menu':'give up'),W/2,410,20,'#fff')}}
 // ---------- drawing ----------
 function rr(x,y,w,h,r,f){g.beginPath();g.roundRect?g.roundRect(x,y,w,h,r):g.rect(x,y,w,h);g.fillStyle=f;g.fill()}
-function txt(s,x,y,size=24,col='#fff',align='center',stroke='#000'){g.font='bold '+size+'px "Trebuchet MS",Arial';g.textAlign=align;g.lineJoin='round';g.lineWidth=Math.max(3,size/6);g.strokeStyle=stroke;g.strokeText(s,x,y);g.fillStyle=col;g.fillText(s,x,y)}
+let KM_MIR=0;const VX=x=>2*MX0+8*PXM-x; // screen x of a match-space x after the side swap
+function txt(s,x,y,size=24,col='#fff',align='center',stroke='#000'){if(KM_MIR){g.save();g.translate(x,0);g.scale(-1,1);g.translate(-x,0)}g.font='bold '+size+'px "Trebuchet MS",Arial';g.textAlign=align;g.lineJoin='round';g.lineWidth=Math.max(3,size/6);g.strokeStyle=stroke;g.strokeText(s,x,y);g.fillStyle=col;g.fillText(s,x,y);if(KM_MIR)g.restore()}
 function bubble(s,x,y){g.font='bold 15px Arial';const w=g.measureText(s).width+18;rr(x-w/2,y-30,w,26,10,'#fff');g.beginPath();g.moveTo(x-6,y-5);g.lineTo(x,y+6);g.lineTo(x+6,y-5);g.fill();g.fillStyle='#222';g.textAlign='center';g.fillText(s,x,y-12)}
 function drawKid(x,y,p){
  const _gx=p.g!=null?p.g:grade,_gi=!!(p.uni||p.mate||p.g!=null||giOn());
@@ -3332,7 +3331,7 @@ function draw(){
  if(state==='faceoff'){drawFaceoff();if(!['tele','win','gap'].includes(FO.ph))drawToasts();return}
  drawBg();drawWorld();hud();
  if(state==='intro'){rr(W/2-300,H/2-80,600,130,20,'rgba(0,0,0,.6)');txt(lv.name,W/2,H/2-30,34,'#ffd600');txt(lv.sub,W/2,H/2+12,22,'#fff')}
- if(state==='stageclear'&&QZ&&!QZ.done)drawQuiz();else if(state==='stageclear'){const G=GRADES[grade],M=mode==='mastery',fin=!M&&grade==GRADES.length-1;g.fillStyle='rgba(0,0,0,.7)';g.fillRect(0,0,W,H);
+ if(state==='stageclear'){const G=GRADES[grade],M=mode==='mastery',fin=!M&&grade==GRADES.length-1;g.fillStyle='rgba(0,0,0,.7)';g.fillRect(0,0,W,H);
   for(let k=0;k<40;k++){const a=k*0.157+frame*.01;g.fillStyle=['#ffd600','#ff4081','#40c4ff','#69f0ae'][k%4];g.fillRect(W/2+Math.cos(a*3)*(200+k*9)%W*.5,((k*53+frame*3)%H),8,8)}
   txt(M?'👑 MASTERY LEVEL '+(mlvl-1)+' CLEARED! 👑':fin?'🥋 OSS! You reached the DOJO! 🥋':'🎉 GRADING PASSED! 🎉',W/2,90,M||fin?38:46,'#ffd600');
   txt(M?'Black Belt Mastery – still a':'You are now:',W/2,140,26,'#fff');txt(G.n.toUpperCase(),W/2,178,G.n.length>20?28:34,'#fff');txt(G.k||'',W/2,206,22,'#80deea');
@@ -3360,7 +3359,9 @@ const kmPad=document.getElementById('touchKM');document.querySelectorAll('#touch
 document.querySelectorAll('#touchFO .fb').forEach(b=>{const h=e=>{e.preventDefault();foInput(b.dataset.d)};b.addEventListener('touchstart',h,{passive:false});b.addEventListener('mousedown',h)});
 function loop(t){if(isTouch){const fo=state==='faceoff',km=state==='kumite';foPad.style.display=fo?'flex':'none';kmPad.style.display=km?'flex':'none';const ti=state==='title';touchEl.style.display=fo||km||TWO||ti?'none':'flex';t2El.style.display=!fo&&!km&&TWO&&!ti?'flex':'none'} /* v14 tidy: no game pads over the menu */trialEl.style.display=(state==='over'||state==='win'||state==='dailydone')&&nb.style.display!=='flex'?'block':'none';acc+=Math.min(100,t-last);last=t;while(acc>=1000/60){update();acc-=1000/60}draw();requestAnimationFrame(loop)}
 addEventListener('keydown',e=>{if(state==='kumite'&&KM&&KM_CER.includes(KM.ph)&&!/INPUT|TEXTAREA/.test(e.target.tagName)&&e.code!=='KeyM'&&e.code!=='Escape'){e.preventDefault();kmSkipCeremony()}},true);cv.addEventListener('pointerdown',()=>{if(state==='kumite'&&KM)kmSkipCeremony()}); // v16: tap or any key skips the ceremony
-window.__DD={get KIAI(){return KIAI_LOG},get KM(){return KM},startGiScene:()=>startGiScene(),get GS(){return GS},startKumite,kmScore,kmAttack,rigPose,kmGeo,kmZone,KUMITE_FROM,SPONSORS,setState:v=>{state=v}}; // v16 test hook (read-only helpers for headless tests)
+const muteBtn=document.getElementById('muteBtn');function muteSync(){muteBtn.textContent=MUTED?'🔇 Muted':'🔊 Sound'}muteSync();muteBtn.addEventListener('click',e=>{e.stopPropagation();MUTED=!MUTED;try{localStorage.setItem('dojoDash.mute',MUTED?'1':'0')}catch(_){}if(MUTED){try{speechSynthesis.cancel()}catch(_){}if(CROWD.au){CROWD.au.m.gain.setTargetAtTime(0,ac.currentTime,.05);CROWD.au.lvl=0}}muteSync()});['pointerdown','touchstart'].forEach(t=>muteBtn.addEventListener(t,e=>e.stopPropagation()));
+setInterval(crowdTick,250);
+window.__DD={kmAward:()=>kmAward(),startLevel:i=>startLevel(i),get state(){return state},setMode:v=>{mode=v},get stageIdx(){return stageIdx},get CROWD(){return CROWD},get MUTED(){return MUTED},get KIAI(){return KIAI_LOG},get KM(){return KM},startGiScene:()=>startGiScene(),get GS(){return GS},startKumite,kmScore,kmAttack,rigPose,kmGeo,kmZone,KUMITE_FROM,SPONSORS,setState:v=>{state=v}}; // v16 test hook (read-only helpers for headless tests)
 requestAnimationFrame(loop);
 })();
 </script></body></html>
